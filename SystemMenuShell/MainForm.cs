@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using EasyHook;
 
-namespace test
+namespace SystemMenuShell
 {
     class MainForm : Form
     {
@@ -172,7 +174,22 @@ namespace test
             InsertMenuItem(hSubMenu, 0, true, ref testitem4);
             InsertMenuItem(hSubMenu, 1, true, ref testitem5);
             InsertMenuItem(hSubMenu, 2, true, ref testitem6);
+
+            // HookProc proc = new HookProc(Proc);
+
+            // using (Process process = Process.GetCurrentProcess()) {
+            //     using (ProcessModule module = process.MainModule) {
+            //         IntPtr hModule = GetModuleHandle(module.ModuleName);
+            //         hHook = SetWindowsHookEx(WH_SHELL, proc, hModule, 0);
+            //     }
+            // }
+
+            // RegisterShellHookWindow(this.Handle);
+
         }
+
+        int MY_MESSAGE = RegisterWindowMessage("MY_MESSAGE");
+        int HWND_BROADCAST = 0xffff;
 
         protected override void WndProc(ref Message m)
         {
@@ -200,6 +217,7 @@ namespace test
                         break;
                     case MENU_ID_03: // 8
                         MessageBox.Show("MFS_GLAYED が選択されました。");
+                        SendNotifyMessage(HWND_BROADCAST, MY_MESSAGE, 0, 0);
                         break;
                     case MENU_ID_04: // 9
                     case MENU_ID_05: // 10
@@ -208,6 +226,39 @@ namespace test
                         break;
                 }
             }
+            else if (m.Msg == MY_MESSAGE) {
+                MessageBox.Show(m.Msg.ToString() + " = from wndproc");
+            }
         }
+
+        static IntPtr hHook;
+
+        private delegate int HookProc(int code, IntPtr wParam, IntPtr lParam);
+
+        private int Proc(int code, IntPtr wParam, IntPtr lParam) {
+            MessageBox.Show(code.ToString());
+            return CallNextHookEx(hHook, code, wParam, lParam);
+        }
+
+        private int WH_SHELL = 10;
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetWindowsHookEx", SetLastError = true)]
+        static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        static extern int CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+        private static extern int RegisterShellHookWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int RegisterWindowMessage(string lpString);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SendNotifyMessage(int hWnd, int Msg, int wParam, int lParam);
+
     }
 }
