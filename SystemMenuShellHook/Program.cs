@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace SystemMenuShellHook
-{
+namespace SystemMenuShellHook {
+
     public class ShellHook {
+
         // https://blog.csdn.net/slimboy123/article/details/5689831
-        
+
         private delegate int HookProc(int code, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll", CharSet=CharSet.Auto)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, int dwThreadId);
 
         [DllImport("user32.dll")]
         static extern int CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32.dll", CharSet=CharSet.Auto)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool UnhookWindowsHookEx(IntPtr idHook);
 
         public static int WH_SHELL = 10;
@@ -58,7 +59,7 @@ namespace SystemMenuShellHook
         public static int shellCb(int code, IntPtr wParam, IntPtr lParam) {
             if (code >= 0) {
                 int msg = 0;
-                
+
                 if (code == HSHELL_ACTIVATESHELLWINDOW)
                     msg = RegisterWindowMessage("SYSTEMMENUSHELL_HSHELL_ACTIVATESHELLWINDOW");
                 else if (code == HSHELL_GETMINRECT)
@@ -79,7 +80,7 @@ namespace SystemMenuShellHook
                 if (msg != 0)
                     SendNotifyMessage(hwndMain, msg, wParam, lParam);
             }
-            
+
             return CallNextHookEx(shellHook, code, wParam, lParam);
         }
     }
