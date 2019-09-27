@@ -7,16 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-
-using SystemMenuShellHook;
+using System.Diagnostics;
 
 namespace SystemMenuShell {
+
     public partial class MainForm : Form {
 
-        // https://www.ipentec.com/document/csharp-add-menu-item-in-system-menu
-        // http://www-higashi.ist.osaka-u.ac.jp/~k-maeda/vcpp/sec6-3menuapp.html
         // http://chokuto.ifdef.jp/urawaza/struct/MENUITEMINFO.html
-        // https://www.pinvoke.net/default.aspx/user32.CreateMenu
 
         [StructLayout(LayoutKind.Sequential)]
         struct MENUITEMINFO {
@@ -33,11 +30,12 @@ namespace SystemMenuShell {
             public uint cch;
             public IntPtr hbmpItem;
 
-            // return the size of the structure
             public static uint sizeOf {
                 get { return (uint)Marshal.SizeOf(typeof(MENUITEMINFO)); }
             }
         }
+
+        // Menu
 
         [DllImport("user32.dll")]
         static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
@@ -59,6 +57,17 @@ namespace SystemMenuShell {
 
         [DllImport("user32.dll")]
         static extern bool EnableMenuItem(IntPtr hMenu, uint uItem, uint uEnable);
+
+        // Hook & Message
+
+        // [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+        // private static extern int RegisterShellHookWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern uint RegisterWindowMessage(string lpString);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        static extern bool SendNotifyMessage(int hWnd, uint Msg, int wParam, int lParam);
 
         // Mask
         private const uint MIIM_STATE = 0x00000001;
@@ -86,6 +95,8 @@ namespace SystemMenuShell {
         ////////////////////////////////////////////////////////////////////////////////////
         // Message
         private const uint WM_SYSCOMMAND = 0x0112;
+        private const uint WM_CREATE = 0x0001;
+        private const uint WM_DESTROY = 0x0002;
         private const uint MF_BYCOMMAND = 0x0;
 
         // wID
@@ -95,6 +106,10 @@ namespace SystemMenuShell {
         private const uint MENU_ID_04 = 0x0004;
         private const uint MENU_ID_05 = 0x0005;
         private const uint MENU_ID_06 = 0x0006;
+
+        // MSG
+        private uint MY_MESSAGE = 0;
+        private const int HWND_BROADCAST = 0xffff;
 
         private IntPtr hSysMenu;
 
@@ -177,45 +192,11 @@ namespace SystemMenuShell {
             InsertMenuItem(hSubMenu, 0, true, ref testitem4);
             InsertMenuItem(hSubMenu, 1, true, ref testitem5);
             InsertMenuItem(hSubMenu, 2, true, ref testitem6);
-
-            
         }
-
-        int MY_MESSAGE = RegisterWindowMessage("MY_MESSAGE");
-
-        int HWND_BROADCAST = 0xffff;
-
-        // static IntPtr hHook;
-
-        private delegate int HookProc(int code, IntPtr wParam, IntPtr lParam);
-
-        // private int Proc(int code, IntPtr wParam, IntPtr lParam) {
-        //     MessageBox.Show(code.ToString());
-        //     return CallNextHookEx(hHook, code, wParam, lParam);
-        // }
-
-        // private int WH_SHELL = 10;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetWindowsHookEx", SetLastError = true)]
-        static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        static extern int CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr GetModuleHandle(string lpModuleName);
-
-        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-        private static extern int RegisterShellHookWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern int RegisterWindowMessage(string lpString);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern bool SendNotifyMessage(int hWnd, int Msg, int wParam, int lParam);
 
         protected override void WndProc(ref Message m) {
             base.WndProc(ref m);
+
             if (m.Msg == WM_SYSCOMMAND) {
                 uint menuid = (uint)(m.WParam.ToInt32() & 0xffff);
                 uint state;
@@ -236,8 +217,10 @@ namespace SystemMenuShell {
                             EnableMenuItem(hSysMenu, MENU_ID_03, MF_BYCOMMAND | MFS_DISABLED);
                         break;
                     case MENU_ID_03: // 8
-                        MessageBox.Show("MFS_GLAYED が選択されました。");
-                        SendNotifyMessage(HWND_BROADCAST, MY_MESSAGE, 0, 0);
+                        // MessageBox.Show("MFS_GLAYED が選択されました。");
+                        MY_MESSAGE = RegisterWindowMessage("MY_MESSAGE");
+                        if (MY_MESSAGE != 0)
+                            SendNotifyMessage(HWND_BROADCAST, MY_MESSAGE, 0, 0);
                         break;
                     case MENU_ID_04: // 9
                     case MENU_ID_05: // 10
@@ -246,12 +229,12 @@ namespace SystemMenuShell {
                         break;
                 }
             } else if (m.Msg == MY_MESSAGE) {
-                MessageBox.Show(m.Msg.ToString() + " = from wndproc");
+                MessageBox.Show(m.Msg.ToString() + " From WndProc MY_MESSAGE");
             }
         }
 
         private void Form1_Load(object sender, EventArgs e) {
-            // ShellHook.initShellHook(0, Handle);
+
         }
     }
 }
