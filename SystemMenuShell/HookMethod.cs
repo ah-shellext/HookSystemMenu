@@ -19,6 +19,12 @@ namespace SystemMenuShell {
 
         [DllImport("SystemMenuShellHook.dll", EntryPoint = "UnInitGetMsgHook")]
         public static extern void UnInitGetMsgHook();
+
+        [DllImport("SystemMenuShellHook.dll", EntryPoint = "InitCbtHook")]
+        public static extern bool InitCbtHook(int threadId, IntPtr destWindow);
+
+        [DllImport("SystemMenuShellHook.dll", EntryPoint = "UnInitCbtHook")]
+        public static extern void UnInitCbtHook();
         
     }
 }

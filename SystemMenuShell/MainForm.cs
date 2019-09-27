@@ -151,37 +151,54 @@ namespace SystemMenuShell {
 
             // Init Hook:
 
+            // 間違ったフォーマットのプログラムを読み込もうとしました。
+            // (HRESULT からの例外:0x8007000B)
             if (m.Msg == NativeConstant.WM_CREATE) {
-                MessageBox.Show("WM_CREATE");
+                // MessageBox.Show("WM_CREATE");
 
-                // 間違ったフォーマットのプログラムを読み込もうとしました。 (HRESULT からの例外:0x8007000B)
+                HookMessage.RegisterMsg();
 
-                HookMethod.InitShellHook(0, Handle);
                 HookMethod.InitGetMsgHook(0, Handle);
+                HookMethod.InitShellHook(0, Handle);
+                HookMethod.InitCbtHook(0, Handle);
+
             } else if (m.Msg == NativeConstant.WM_DESTROY) {
-                MessageBox.Show("WM_DESTROY");
-                HookMethod.UnInitShellHook();
+                // MessageBox.Show("WM_DESTROY");
                 HookMethod.UnInitGetMsgHook();
+                HookMethod.UnInitShellHook();
+                HookMethod.UnInitCbtHook();
             }
             
-            // Proc Hook Msg:
+            // Proc Shell Hook Msg:
 
+            // if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED ||
+            //     m.Msg == HookMessage.MSG_HCBT_CREATEWND) {
             if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED) {
                 IntPtr winHwnd = m.WParam;
-
                 int length = NativeMethod.GetWindowTextLength(winHwnd);
                 StringBuilder windowName = new StringBuilder(length + 1);
                 NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
 
-                MessageBox.Show("WINDOWCREATED: " + windowName.ToString());
+                if (windowName.ToString() != "")
+                    MessageBox.Show("WINDOWCREATED: " + windowName.ToString());
+            // } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED ||
+            //     m.Msg == HookMessage.MSG_HCBT_DESTROYWND) {
             } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED) {
                 IntPtr winHwnd = m.WParam;
-
                 int length = NativeMethod.GetWindowTextLength(winHwnd);
                 StringBuilder windowName = new StringBuilder(length + 1);
                 NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
 
-                MessageBox.Show("WINDOWDESTROYED: " + windowName.ToString());
+                if (windowName.ToString() != "")
+                    MessageBox.Show("WINDOWDESTROYED: " + windowName.ToString());
+            }
+
+            // Proc GetMsg Hook Msg:
+            
+            if (m.Msg == HookMessage.MSG_HOOK_GETMSG_PARAMS) {
+                // MessageBox.Show("MSG_HOOK_GETMSG_PARAMS");
+            } else if (m.Msg == HookMessage.MSG_HOOK_GETMSG) {
+                // MessageBox.Show("MSG_HOOK_GETMSG");
             }
         }
 
@@ -191,6 +208,12 @@ namespace SystemMenuShell {
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
             
+        }
+
+        private void button1_Click(object sender, EventArgs e) {
+            Form form = new Form();
+            form.Text = "Test";
+            form.Show();
         }
     }
 }

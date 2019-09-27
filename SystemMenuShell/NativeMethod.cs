@@ -72,5 +72,8 @@ namespace SystemMenuShell {
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int nMaxCount);
 
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetThreadDesktop(int threadId);
+
     }
 }
