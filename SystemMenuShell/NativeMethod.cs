@@ -53,10 +53,12 @@ namespace SystemMenuShell {
         [DllImport("user32.dll")]
         public static extern bool EnableMenuItem(IntPtr hMenu, uint uItem, uint uEnable);
 
-        // Hook & Message
+        // Hook
 
-        // [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
-        // public static extern int RegisterShellHookWindow(IntPtr hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
+        public static extern int RegisterShellHookWindow(IntPtr hWnd);
+
+        // Message
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint RegisterWindowMessage(string lpString);
@@ -67,13 +69,37 @@ namespace SystemMenuShell {
         // Window
 
         [DllImport("user32.dll")]
-        public static extern int GetWindowTextLength(IntPtr hWnd);
- 
+        public static extern IntPtr GetThreadDesktop(int threadId);
+
+        [DllImport("User32.Dll")]
+        public static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        public static IntPtr GetNextWindow(IntPtr hWnd) {
+            return GetWindow(hWnd, NativeConstant.GW_HWNDNEXT);
+        }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetParent(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
+
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int nMaxCount);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr GetThreadDesktop(int threadId);
-
+        public static extern int GetWindowTextLength(IntPtr hWnd);
+ 
     }
 }

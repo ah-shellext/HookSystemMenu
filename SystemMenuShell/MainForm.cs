@@ -114,6 +114,8 @@ namespace SystemMenuShell {
         protected override void WndProc(ref Message m) {
             base.WndProc(ref m);
 
+            // System menu event test:
+
             if (m.Msg == NativeConstant.WM_SYSCOMMAND) {
                 uint menuid = (uint)(m.WParam.ToInt32() & 0xffff);
                 uint state;
@@ -150,57 +152,98 @@ namespace SystemMenuShell {
             }
 
             // Init Hook:
-
             // 間違ったフォーマットのプログラムを読み込もうとしました。
-            // (HRESULT からの例外:0x8007000B)
-            if (m.Msg == NativeConstant.WM_CREATE) {
-                // MessageBox.Show("WM_CREATE");
 
-                HookMessage.RegisterMsg();
-
-                HookMethod.InitGetMsgHook(0, Handle);
-                HookMethod.InitShellHook(0, Handle);
-                HookMethod.InitCbtHook(0, Handle);
-
-            } else if (m.Msg == NativeConstant.WM_DESTROY) {
-                // MessageBox.Show("WM_DESTROY");
-                HookMethod.UnInitGetMsgHook();
-                HookMethod.UnInitShellHook();
-                HookMethod.UnInitCbtHook();
-            }
+            if (m.Msg == NativeConstant.WM_CREATE)
+                onStartHook();
+            else if (m.Msg == NativeConstant.WM_DESTROY)
+                onStopHook();
             
             // Proc Shell Hook Msg:
 
-            // if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED ||
-            //     m.Msg == HookMessage.MSG_HCBT_CREATEWND) {
-            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED) {
-                IntPtr winHwnd = m.WParam;
-                int length = NativeMethod.GetWindowTextLength(winHwnd);
-                StringBuilder windowName = new StringBuilder(length + 1);
-                NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
-
-                if (windowName.ToString() != "")
-                    MessageBox.Show("WINDOWCREATED: " + windowName.ToString());
-            // } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED ||
-            //     m.Msg == HookMessage.MSG_HCBT_DESTROYWND) {
-            } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED) {
-                IntPtr winHwnd = m.WParam;
-                int length = NativeMethod.GetWindowTextLength(winHwnd);
-                StringBuilder windowName = new StringBuilder(length + 1);
-                NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
-
-                if (windowName.ToString() != "")
-                    MessageBox.Show("WINDOWDESTROYED: " + windowName.ToString());
-            }
+            IntPtr winHwnd = m.WParam;
+            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED || m.Msg == HookMessage.MSG_HCBT_CREATEWND)
+                onWindowCreated(winHwnd);
+            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED || m.Msg == HookMessage.MSG_HCBT_DESTROYWND)
+                onWindowDestroyed(winHwnd);
+            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED || m.Msg == HookMessage.MSG_HCBT_ACTIVATE)
+                onWindowActivated(winHwnd);
 
             // Proc GetMsg Hook Msg:
             
-            if (m.Msg == HookMessage.MSG_HOOK_GETMSG_PARAMS) {
-                // MessageBox.Show("MSG_HOOK_GETMSG_PARAMS");
-            } else if (m.Msg == HookMessage.MSG_HOOK_GETMSG) {
-                // MessageBox.Show("MSG_HOOK_GETMSG");
+            if (m.Msg == HookMessage.MSG_HOOK_GETMSG) {
+                WinUtil.cacheHandle = m.WParam;
+                WinUtil.cacheMessage = m.LParam;
+            } else if (m.Msg == HookMessage.MSG_HOOK_GETMSG_PARAMS) {
+                if (WinUtil.cacheHandle != IntPtr.Zero && WinUtil.cacheMessage != IntPtr.Zero) {
+                    onWinProcMsg(WinUtil.cacheHandle, WinUtil.cacheMessage, m.WParam, m.LParam);
+                    WinUtil.cacheHandle = IntPtr.Zero;
+                    WinUtil.cacheMessage = IntPtr.Zero;
+                }
             }
         }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Handle events
+
+        private void onStartHook() {
+            var WinList = WinUtil.GetAllWindows();
+            foreach (var hwnd in WinList) {
+                string title = WinUtil.GetWindowTitle(hwnd);
+                if (title != "") listBox1.Items.Add("Existed: " + title);
+            }
+            listBox1.ClearSelected();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+            HookMessage.RegisterMsg();
+
+            HookMethod.InitGetMsgHook(0, Handle);
+            HookMethod.InitShellHook(0, Handle);
+            HookMethod.InitCbtHook(0, Handle);
+
+        }
+
+        private void onStopHook() {
+            HookMethod.UnInitGetMsgHook();
+            HookMethod.UnInitShellHook();
+            HookMethod.UnInitCbtHook();
+        }
+
+        private void onWindowCreated(IntPtr hwnd) {
+            if (!WinUtil.IsWindow(hwnd)) return;
+            string title = WinUtil.GetWindowTitle(hwnd);
+            if (title != "") listBox1.Items.Add("Created: " + title);
+            listBox1.ClearSelected();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+        }
+
+        private void onWindowDestroyed(IntPtr hwnd) {
+            // if (!WinUtil.IsWindow(hwnd)) return;
+            string title = WinUtil.GetWindowTitle(hwnd);
+            if (title != "") listBox1.Items.Add("Destroyed: " + title);
+            listBox1.ClearSelected();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+        }
+
+        private void onWindowActivated(IntPtr hwnd) {
+            if (!WinUtil.IsWindow(hwnd)) return;
+            string title = WinUtil.GetWindowTitle(hwnd);
+            // if (title != "") listBox1.Items.Add("Activated: " + title);
+            listBox1.ClearSelected();
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+        }
+
+        private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {
+            if (message.ToInt64() == NativeConstant.WM_SYSCOMMAND) {
+                string title = WinUtil.GetWindowTitle(hwnd);
+                if (title != "") listBox1.Items.Add("WinProc: " + title);
+                listBox1.ClearSelected();
+                listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Others
 
         private void MainForm_Load(object sender, EventArgs e) {
 

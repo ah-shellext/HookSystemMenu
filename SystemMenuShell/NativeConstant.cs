@@ -36,5 +36,30 @@ namespace SystemMenuShell {
         public const uint WM_DESTROY = 0x0002;
 
         public const uint MF_BYCOMMAND = 0x0000;
+
+        // UCMD
+
+        public const uint GW_HWNDFIRST = 0;
+        public const uint GW_HWNDLAST = 1;
+        public const uint GW_HWNDNEXT = 2;
+        public const uint GW_HWNDPREV = 3;
+        public const uint GW_OWNER = 4;
+        public const uint GW_CHILD = 5;
+        public const uint GW_ENABLEDPOPUP = 6;
+
+        // Window Long Param
+
+        public const int GWL_WNDPROC = -4;
+        public const int GWL_HINSTANCE = -6;
+        public const int GWL_HWNDPARENT = -8;
+        public const int GWL_STYLE = -16;
+        public const int GWL_EXSTYLE = -20;
+        public const int GWL_USERDATA = -21;
+        public const int GWL_ID = -12;
+
+        // Window styles
+
+        public const uint WS_VISIBLE = 0x10000000;
+        public const uint WS_EX_TOOLWINDOW = 0x00000080;
     }
 }
