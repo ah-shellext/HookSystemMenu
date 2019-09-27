@@ -148,10 +148,49 @@ namespace SystemMenuShell {
             } else if (m.Msg == MY_MESSAGE) {
                 MessageBox.Show(m.Msg.ToString() + " From WndProc MY_MESSAGE");
             }
+
+            // Init Hook:
+
+            if (m.Msg == NativeConstant.WM_CREATE) {
+                MessageBox.Show("WM_CREATE");
+
+                // 間違ったフォーマットのプログラムを読み込もうとしました。 (HRESULT からの例外:0x8007000B)
+
+                HookMethod.InitShellHook(0, Handle);
+                HookMethod.InitGetMsgHook(0, Handle);
+            } else if (m.Msg == NativeConstant.WM_DESTROY) {
+                MessageBox.Show("WM_DESTROY");
+                HookMethod.UnInitShellHook();
+                HookMethod.UnInitGetMsgHook();
+            }
+            
+            // Proc Hook Msg:
+
+            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED) {
+                IntPtr winHwnd = m.WParam;
+
+                int length = NativeMethod.GetWindowTextLength(winHwnd);
+                StringBuilder windowName = new StringBuilder(length + 1);
+                NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
+
+                MessageBox.Show("WINDOWCREATED: " + windowName.ToString());
+            } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED) {
+                IntPtr winHwnd = m.WParam;
+
+                int length = NativeMethod.GetWindowTextLength(winHwnd);
+                StringBuilder windowName = new StringBuilder(length + 1);
+                NativeMethod.GetWindowText(winHwnd, windowName, windowName.Capacity);
+
+                MessageBox.Show("WINDOWDESTROYED: " + windowName.ToString());
+            }
         }
 
-        private void Form1_Load(object sender, EventArgs e) {
+        private void MainForm_Load(object sender, EventArgs e) {
 
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
+            
         }
     }
 }
