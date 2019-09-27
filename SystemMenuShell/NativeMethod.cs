@@ -53,6 +53,9 @@ namespace SystemMenuShell {
         [DllImport("user32.dll")]
         public static extern bool EnableMenuItem(IntPtr hMenu, uint uItem, uint uEnable);
 
+        [DllImport("user32.dll")]
+        public static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
+
         // Hook
 
         [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]

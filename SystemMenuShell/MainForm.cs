@@ -161,13 +161,12 @@ namespace SystemMenuShell {
             
             // Proc Shell Hook Msg:
 
-            IntPtr winHwnd = m.WParam;
             if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED || m.Msg == HookMessage.MSG_HCBT_CREATEWND)
-                onWindowCreated(winHwnd);
+                onWindowCreated(m.WParam);
             else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED || m.Msg == HookMessage.MSG_HCBT_DESTROYWND)
-                onWindowDestroyed(winHwnd);
+                onWindowDestroyed(m.WParam);
             else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED || m.Msg == HookMessage.MSG_HCBT_ACTIVATE)
-                onWindowActivated(winHwnd);
+                onWindowActivated(m.WParam);
 
             // Proc GetMsg Hook Msg:
             
@@ -185,60 +184,74 @@ namespace SystemMenuShell {
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Handle events
+        List<IntPtr> WinList;
 
         private void onStartHook() {
-            var WinList = WinUtil.GetAllWindows();
+            WinList = WinUtil.GetAllWindows();
             foreach (var hwnd in WinList) {
+                WinUtil.InsertSystemMenu(hwnd);
+
                 string title = WinUtil.GetWindowTitle(hwnd);
-                if (title != "") listBox1.Items.Add("Existed: " + title);
+                if (title != "") listBox1.Items.Add("Exist: " + hwnd.ToInt32().ToString() + " " + title);
             }
-            listBox1.ClearSelected();
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
             HookMessage.RegisterMsg();
 
             HookMethod.InitGetMsgHook(0, Handle);
             HookMethod.InitShellHook(0, Handle);
             HookMethod.InitCbtHook(0, Handle);
-
         }
 
         private void onStopHook() {
+            foreach (var hwnd in WinList) {
+                WinUtil.RemoveSystemMenu(hwnd);
+            }
+
             HookMethod.UnInitGetMsgHook();
             HookMethod.UnInitShellHook();
             HookMethod.UnInitCbtHook();
         }
 
         private void onWindowCreated(IntPtr hwnd) {
-            if (!WinUtil.IsWindow(hwnd)) return;
+            // if (!WinUtil.IsWindow(hwnd)) return;
+            if (WinList.IndexOf(hwnd) != -1) return;
+
             string title = WinUtil.GetWindowTitle(hwnd);
-            if (title != "") listBox1.Items.Add("Created: " + title);
-            listBox1.ClearSelected();
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            if (title != "") listBox1.Items.Add("Create: " + hwnd.ToInt32().ToString() + " " + title);
+
+            WinList.Add(hwnd);
+            WinUtil.InsertSystemMenu(hwnd);
         }
 
         private void onWindowDestroyed(IntPtr hwnd) {
-            // if (!WinUtil.IsWindow(hwnd)) return;
+            if (WinList.IndexOf(hwnd) == -1) return;
+
             string title = WinUtil.GetWindowTitle(hwnd);
-            if (title != "") listBox1.Items.Add("Destroyed: " + title);
-            listBox1.ClearSelected();
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            if (title != "") listBox1.Items.Add("Delete: " + hwnd.ToInt32().ToString() + " " + title);
+
+            WinList.Remove(hwnd);
+            WinUtil.RemoveSystemMenu(hwnd);
         }
 
         private void onWindowActivated(IntPtr hwnd) {
-            if (!WinUtil.IsWindow(hwnd)) return;
-            string title = WinUtil.GetWindowTitle(hwnd);
-            // if (title != "") listBox1.Items.Add("Activated: " + title);
-            listBox1.ClearSelected();
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+//             if (WinList.IndexOf(hwnd) != -1) return;
+//             string title = WinUtil.GetWindowTitle(hwnd);
+//             if (title != "") listBox1.Items.Add("Activate: " + hwnd.ToInt32().ToString() + " " + title);
+// 
+//             if (WinList.IndexOf(hwnd) != -1) return;
+// 
+//             WinList.Add(hwnd);
+//             WinUtil.InsertSystemMenu(hwnd);
         }
 
         private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {
             if (message.ToInt64() == NativeConstant.WM_SYSCOMMAND) {
                 string title = WinUtil.GetWindowTitle(hwnd);
-                if (title != "") listBox1.Items.Add("WinProc: " + title);
-                listBox1.ClearSelected();
-                listBox1.SelectedIndex = listBox1.Items.Count - 1;
+
+                uint menuid = (uint)(WParam.ToInt32() & 0xffff);
+                if (menuid == WinUtil.MENU_ID_TOPMOST) {
+                    MessageBox.Show("MENU_ID_TOPMOST: " + title);
+                }
             }
         }
 
