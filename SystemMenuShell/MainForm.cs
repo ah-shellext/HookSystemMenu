@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Threading;
 
 namespace SystemMenuShell {
 
@@ -161,25 +162,37 @@ namespace SystemMenuShell {
             
             // Proc Shell Hook Msg:
 
-            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED || m.Msg == HookMessage.MSG_HCBT_CREATEWND)
+            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED ||
+                m.Msg == HookMessage.MSG_HCBT_CREATEWND)
                 onWindowCreated(m.WParam);
-            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED || m.Msg == HookMessage.MSG_HCBT_DESTROYWND)
+            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED ||
+                m.Msg == HookMessage.MSG_HCBT_DESTROYWND)
                 onWindowDestroyed(m.WParam);
-            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED || m.Msg == HookMessage.MSG_HCBT_ACTIVATE)
+            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED
+                || m.Msg == HookMessage.MSG_HCBT_ACTIVATE
+                || m.Msg == HookMessage.MSG_HCBT_SETFOCUS)
                 onWindowActivated(m.WParam);
 
             // Proc GetMsg Hook Msg:
-            
+
             if (m.Msg == HookMessage.MSG_HOOK_GETMSG) {
+                addToList(m.WParam, "GetMsg");
                 WinUtil.cacheHandle = m.WParam;
                 WinUtil.cacheMessage = m.LParam;
             } else if (m.Msg == HookMessage.MSG_HOOK_GETMSG_PARAMS) {
                 if (WinUtil.cacheHandle != IntPtr.Zero && WinUtil.cacheMessage != IntPtr.Zero) {
+                    addToList(WinUtil.cacheHandle, "GetMsgParam");
                     onWinProcMsg(WinUtil.cacheHandle, WinUtil.cacheMessage, m.WParam, m.LParam);
                     WinUtil.cacheHandle = IntPtr.Zero;
                     WinUtil.cacheMessage = IntPtr.Zero;
                 }
             }
+        }
+
+        private void addToList(IntPtr hwnd, string token) {
+            string title = WinUtil.GetWindowTitle(hwnd);
+            if (title != "") listBox1.Items.Add(token + ": 0x" + hwnd.ToInt64().ToString("X6") + " " + title);
+            listBox1.SelectedIndex = listBox1.Items.Count - 1;
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,10 +202,7 @@ namespace SystemMenuShell {
         private void onStartHook() {
             WinList = WinUtil.GetAllWindows();
             foreach (var hwnd in WinList) {
-                WinUtil.InsertSystemMenu(hwnd);
-
-                string title = WinUtil.GetWindowTitle(hwnd);
-                if (title != "") listBox1.Items.Add("Exist: " + hwnd.ToInt32().ToString() + " " + title);
+                addToList(hwnd, "Exist");
             }
 
             HookMessage.RegisterMsg();
@@ -204,7 +214,7 @@ namespace SystemMenuShell {
 
         private void onStopHook() {
             foreach (var hwnd in WinList) {
-                WinUtil.RemoveSystemMenu(hwnd);
+                // WinUtil.RemoveSystemMenu(hwnd);
             }
 
             HookMethod.UnInitGetMsgHook();
@@ -213,35 +223,37 @@ namespace SystemMenuShell {
         }
 
         private void onWindowCreated(IntPtr hwnd) {
-            // if (!WinUtil.IsWindow(hwnd)) return;
-            if (WinList.IndexOf(hwnd) != -1) return;
-
-            string title = WinUtil.GetWindowTitle(hwnd);
-            if (title != "") listBox1.Items.Add("Create: " + hwnd.ToInt32().ToString() + " " + title);
-
-            WinList.Add(hwnd);
-            WinUtil.InsertSystemMenu(hwnd);
+            var newList = WinUtil.GetAllWindows();
+            button1.Text = "Cre " + newList.Count.ToString();
+            foreach (var newHwnd in newList.Except(WinList)) {
+                addToList(newHwnd, "Create");
+            }
+            WinList = newList;
         }
 
         private void onWindowDestroyed(IntPtr hwnd) {
-            if (WinList.IndexOf(hwnd) == -1) return;
-
-            string title = WinUtil.GetWindowTitle(hwnd);
-            if (title != "") listBox1.Items.Add("Delete: " + hwnd.ToInt32().ToString() + " " + title);
-
-            WinList.Remove(hwnd);
-            WinUtil.RemoveSystemMenu(hwnd);
+            var newList = WinUtil.GetAllWindows();
+            button1.Text = "Des " + newList.Count.ToString();
+            foreach (var oldHwnd in WinList.Except(newList)) {
+                addToList(oldHwnd, "Delete");
+            }
+            WinList = newList;
         }
 
         private void onWindowActivated(IntPtr hwnd) {
-//             if (WinList.IndexOf(hwnd) != -1) return;
-//             string title = WinUtil.GetWindowTitle(hwnd);
-//             if (title != "") listBox1.Items.Add("Activate: " + hwnd.ToInt32().ToString() + " " + title);
-// 
-//             if (WinList.IndexOf(hwnd) != -1) return;
-// 
-//             WinList.Add(hwnd);
-//             WinUtil.InsertSystemMenu(hwnd);
+
+            var newList = WinUtil.GetAllWindows();
+            button1.Text = "Act " + newList.Count.ToString();
+            if (newList.Count > WinList.Count) {
+                foreach (var newHwnd in newList.Except(WinList)) {
+                    addToList(newHwnd, "Create(Act)");
+                }
+            } else {
+                foreach (var newHwnd in WinList.Except(newList)) {
+                    addToList(newHwnd, "Delete(Act)");
+                }
+            }
+            WinList = newList;
         }
 
         private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {

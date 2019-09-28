@@ -45,8 +45,8 @@ namespace SystemMenuShell {
             return windowName.ToString();
         }
 
-        public const uint MENU_ID_SPLIT = 0xAA01;
-        public const uint MENU_ID_TOPMOST = 0xAA02;
+        public const uint MENU_ID_SPLIT = 0x0001;
+        public const uint MENU_ID_TOPMOST = 0x0002;
 
         public static void InsertSystemMenu(IntPtr Hwnd) {
 
