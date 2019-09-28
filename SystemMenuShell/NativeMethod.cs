@@ -8,6 +8,8 @@ namespace SystemMenuShell {
 
     static class NativeMethod {
 
+        // https://www.pinvoke.net/default.aspx/user32/GetWindowRect.html
+
         // http://chokuto.ifdef.jp/urawaza/struct/MENUITEMINFO.html
 
         [StructLayout(LayoutKind.Sequential)]
@@ -28,6 +30,17 @@ namespace SystemMenuShell {
             public static uint sizeOf {
                 get { return (uint)Marshal.SizeOf(typeof(MENUITEMINFO)); }
             }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Rect {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+
+            public int Width { get { return Right - Left; } }
+            public int Height { get { return Bottom - Top; } }
         }
 
         // Menu
@@ -103,6 +116,15 @@ namespace SystemMenuShell {
 
         [DllImport("user32.dll")]
         public static extern int GetWindowTextLength(IntPtr hWnd);
- 
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool GetWindowRect(IntPtr hwnd, out Rect lpRect);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
     }
 }
