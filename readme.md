@@ -11,7 +11,7 @@
 
 ### Screenshot
 
-![Screenshot](./Assets/screenshot.jpg)
+![Screenshot](./Assets/Screenshot.jpg)
 
 ### References
 + [システムメニューにメニューを追加する](https://www.ipentec.com/document/csharp-add-menu-item-in-system-menu)

@@ -16,56 +16,13 @@ namespace SystemMenuShell {
 
         // wID
         private const uint MENU_ID_03 = 0x0003;
-        
-        // MSG
-        private uint MY_MESSAGE = 0;
-        private const int HWND_BROADCAST = 0xffff;
-
-        private IntPtr hSysMenu;
 
         public MainForm() {
             InitializeComponent();
-
-            hSysMenu = NativeMethod.GetSystemMenu(this.Handle, false);
-
-            // Split
-            var splititem = new NativeMethod.MENUITEMINFO();
-            splititem.cbSize = (uint) Marshal.SizeOf(splititem);
-            splititem.fMask = NativeConstant.MIIM_FTYPE;
-            splititem.fType = NativeConstant.MFT_SEPARATOR;
-
-            // Disable
-            var testitem3 = new NativeMethod.MENUITEMINFO();
-            testitem3.cbSize = (uint) Marshal.SizeOf(testitem3);
-            testitem3.fMask = NativeConstant.MIIM_STRING | NativeConstant.MIIM_ID | NativeConstant.MIIM_STATE;
-            testitem3.dwTypeData = "MFS_GLAYED";
-            testitem3.wID = MENU_ID_03;
-            testitem3.fState = NativeConstant.MFS_DEFAULT;
-            // testitem3.fState = NativeConstant.MFS_GLAYED;
-
-            NativeMethod.InsertMenuItem(hSysMenu, 5, true, ref splititem);
-            NativeMethod.InsertMenuItem(hSysMenu, 6, true, ref testitem3);
         }
 
         protected override void WndProc(ref Message m) {
             base.WndProc(ref m);
-
-            // System menu event test:
-
-            if (m.Msg == NativeConstant.WM_SYSCOMMAND) {
-                uint menuid = (uint)(m.WParam.ToInt32() & 0xffff);
-
-                switch (menuid) {
-                    case MENU_ID_03:
-                        // MessageBox.Show("MFS_GLAYED が選択されました。");
-                        MY_MESSAGE = NativeMethod.RegisterWindowMessage("MY_MESSAGE");
-                        if (MY_MESSAGE != 0)
-                            NativeMethod.SendNotifyMessage(HWND_BROADCAST, MY_MESSAGE, 0, 0);
-                        break;
-                }
-            } else if (m.Msg == MY_MESSAGE) {
-                MessageBox.Show(m.Msg.ToString() + " From WndProc MY_MESSAGE");
-            }
 
             // Init Hook:
             // 間違ったフォーマットのプログラムを読み込もうとしました。
@@ -115,8 +72,8 @@ namespace SystemMenuShell {
             WinList = WinUtil.GetAllWindows();
             foreach (var hwnd in WinList) {
                 addToList(hwnd, "Exist");
-                WinUtil.InsertSystemMenu(hwnd);
-                WinUtil.InitMenuItemState(hwnd);
+                if (WinUtil.InsertSystemMenu(hwnd))
+                    WinUtil.InitMenuItemState(hwnd);
             }
 
             HookMessage.RegisterMsg();
@@ -141,8 +98,9 @@ namespace SystemMenuShell {
             button1.Text = "Cre " + newList.Count.ToString();
             foreach (var newHwnd in newList.Except(WinList)) {
                 addToList(newHwnd, "Create");
-                WinUtil.InsertSystemMenu(hwnd);
-                WinUtil.InitMenuItemState(hwnd);
+                if (WinUtil.InsertSystemMenu(hwnd)) {
+                    WinUtil.InitMenuItemState(hwnd);
+                }
             }
             WinList = newList;
         }
@@ -166,15 +124,15 @@ namespace SystemMenuShell {
 
             foreach (var newHwnd in newList.Except(WinList)) {
                 addToList(newHwnd, "Create(Act)");
-                WinUtil.InsertSystemMenu(newHwnd);
-                WinUtil.InitMenuItemState(newHwnd);
+                if (WinUtil.InsertSystemMenu(hwnd)) {
+                    WinUtil.InitMenuItemState(hwnd);
+                }
             }
 
             foreach (var oldHwnd in WinList.Except(newList)) {
                 addToList(oldHwnd, "Delete(Act)");
                 WinUtil.RemoveSystemMenu(oldHwnd);
             }
-
             WinList = newList;
         }
 
@@ -193,7 +151,8 @@ namespace SystemMenuShell {
         // Others
 
         private void MainForm_Load(object sender, EventArgs e) {
-            this.TopMost = true;
+            // this.TopMost = true;
+            // this.Hide();
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {

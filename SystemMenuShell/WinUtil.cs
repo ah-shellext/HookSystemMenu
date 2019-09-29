@@ -54,12 +54,12 @@ namespace SystemMenuShell {
         public const uint MENU_ID_TOPMOST = 0xAF02;
         public const uint MENU_ID_PRTSC = 0xAF03;
 
-        public static void InsertSystemMenu(IntPtr Hwnd) {
+        public static bool InsertSystemMenu(IntPtr Hwnd) {
 
             IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
 
             if (hSysMenu == IntPtr.Zero) 
-                return;
+                return false;
 
             // Split
             var split_menuitem = new NativeMethod.MENUITEMINFO();
@@ -69,12 +69,12 @@ namespace SystemMenuShell {
             split_menuitem.wID = MENU_ID_SPLIT;
 
             // TopMost
-            var topmost_menuitem = new NativeMethod.MENUITEMINFO();
-            topmost_menuitem.cbSize = (uint)Marshal.SizeOf(topmost_menuitem);
-            topmost_menuitem.fMask = NativeConstant.MIIM_STRING | NativeConstant.MIIM_ID | NativeConstant.MIIM_STATE;
-            topmost_menuitem.dwTypeData = "トップにピン(&P)";
-            topmost_menuitem.wID = MENU_ID_TOPMOST;
-            topmost_menuitem.fState = NativeConstant.MFS_UNCHECKED;
+            var topMost_menuitem = new NativeMethod.MENUITEMINFO();
+            topMost_menuitem.cbSize = (uint)Marshal.SizeOf(topMost_menuitem);
+            topMost_menuitem.fMask = NativeConstant.MIIM_STRING | NativeConstant.MIIM_ID | NativeConstant.MIIM_STATE;
+            topMost_menuitem.dwTypeData = "トップにピン(&P)";
+            topMost_menuitem.wID = MENU_ID_TOPMOST;
+            topMost_menuitem.fState = NativeConstant.MFS_UNCHECKED;
 
             // Screenshot
             var prtSc_menuitem = new NativeMethod.MENUITEMINFO();
@@ -85,12 +85,17 @@ namespace SystemMenuShell {
             prtSc_menuitem.fState = NativeConstant.MFS_UNCHECKED;
 
             NativeMethod.InsertMenuItem(hSysMenu, 5, true, ref split_menuitem);
-            NativeMethod.InsertMenuItem(hSysMenu, 6, true, ref topmost_menuitem);
+            NativeMethod.InsertMenuItem(hSysMenu, 6, true, ref topMost_menuitem);
             NativeMethod.InsertMenuItem(hSysMenu, 7, true, ref prtSc_menuitem);
+
+            return true;
         }
 
         public static void RemoveSystemMenu(IntPtr Hwnd) {
             IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
+            if (hSysMenu == IntPtr.Zero)
+                return;
+
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_SPLIT, NativeConstant.MF_BYCOMMAND);
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_TOPMOST, NativeConstant.MF_BYCOMMAND);
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_PRTSC, NativeConstant.MF_BYCOMMAND);
@@ -98,10 +103,9 @@ namespace SystemMenuShell {
 
         public static void InitMenuItemState(IntPtr Hwnd) {
             IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
-
-            uint topMost =
-                (NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST) != 0 ?
-                NativeConstant.MFS_CHECKED : NativeConstant.MFS_UNCHECKED;
+            
+            bool isTop = (NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST) != 0;
+            uint topMost = isTop ? NativeConstant.MFS_CHECKED : NativeConstant.MFS_UNCHECKED;
 
             NativeMethod.CheckMenuItem(hSysMenu, MENU_ID_TOPMOST, NativeConstant.MF_BYCOMMAND | topMost);
         }
