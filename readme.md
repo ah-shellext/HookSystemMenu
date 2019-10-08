@@ -6,12 +6,18 @@
 + Send message when hook through `RegisterWindowMessage()` and `SendNotifyMessage()`
 + Receive message at `WndProc()` and forward window's `WM_SYSCOMMAND` message
 
-### Problem
-+ There are some windows couldn't send message through global hook, include `WH_SHELL` and `WH_GETMESSAGE` 
+### Functions
++ Top most the window
++ Copy the window screenshot
++ Open the process path
+
+### Problems
++ There are some windows (Such as `Chrome` and `Visual Studio 2010`) couldn't hook `WH_GETMESSAGE` message
 
 ### Screenshot
 
 ![Screenshot](./Assets/Screenshot.jpg)
+![Screenshot](./Assets/Screenshot_2.jpg)
 
 ### References
 + [システムメニューにメニューを追加する](https://www.ipentec.com/document/csharp-add-menu-item-in-system-menu)

@@ -53,11 +53,9 @@ namespace SystemMenuShell {
                 WinUtil.cacheMessage = m.LParam;
             } else if (m.Msg == HookMessage.MSG_HGETMSG_GETMSG_PARAMS) {
                 if (WinUtil.cacheHandle != IntPtr.Zero && WinUtil.cacheMessage != IntPtr.Zero) {
-
-                    addToList(WinUtil.cacheHandle, "GetMsgParam"); 
+                    addToList(WinUtil.cacheHandle, "GetMsgParam");
                     onWinProcMsg(WinUtil.cacheHandle, WinUtil.cacheMessage, m.WParam, m.LParam);
-                    WinUtil.cacheHandle = IntPtr.Zero;
-                    WinUtil.cacheMessage = IntPtr.Zero;
+                    WinUtil.cacheHandle = WinUtil.cacheMessage = IntPtr.Zero;
                 }
             }
         }
@@ -83,6 +81,7 @@ namespace SystemMenuShell {
             HookMessage.RegisterMsg();
 
             HookMethod.InitGetMsgHook(0, Handle);
+            HookMethod.InitCallWndProcHook(0, Handle);
             HookMethod.InitShellHook(0, Handle);
             HookMethod.InitCbtHook(0, Handle);
         }
@@ -143,7 +142,7 @@ namespace SystemMenuShell {
         private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {
             // TODO
             if (message.ToInt64() == NativeConstant.WM_SYSCOMMAND) {
-                uint menuid = (uint)(WParam.ToInt32() & 0xffff);
+                uint menuid = (uint)(WParam.ToInt64() & 0x0000FFFF);
                 if (menuid == WinUtil.MENU_ID_TOPMOST)
                     WinUtil.OnTopMostMenuItemClick(hwnd);
                 else if (menuid == WinUtil.MENU_ID_PRTSC)
@@ -174,6 +173,7 @@ namespace SystemMenuShell {
             ctxMenu.MenuItems[0].DefaultItem = true;
             notifyIcon.ContextMenu = ctxMenu;
 
+            this.TopMost = true;
             new Thread(new ThreadStart(() => {
                 Thread.Sleep(100);
                 this.Invoke(new Action(() => Hide() ));

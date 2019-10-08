@@ -8,5 +8,6 @@ Release/
 *.filters
 *.sdf
 *.opensdf
+*.bak
 
 ipch/
