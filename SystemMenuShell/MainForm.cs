@@ -31,6 +31,10 @@ namespace SystemMenuShell {
                 onStartHook();
             else if (m.Msg == NativeConstant.WM_DESTROY)
                 onStopHook();
+            else if (m.Msg == NativeConstant.WM_SHOWWINDOW) {
+                this.Hide();
+                // this.Opacity = 0;
+            }
             
             // Proc Shell Hook Msg:
 
@@ -100,7 +104,7 @@ namespace SystemMenuShell {
                 addToList(newHwnd, "Create");
                 if (WinUtil.InsertSystemMenu(hwnd)) {
                     WinUtil.InitMenuItemState(hwnd);
-                }
+                 }
             }
             WinList = newList;
         }
@@ -144,6 +148,8 @@ namespace SystemMenuShell {
                     WinUtil.OnTopMostMenuItemClick(hwnd);
                 else if (menuid == WinUtil.MENU_ID_PRTSC)
                     WinUtil.OnPrtScMenuItemClick(hwnd);
+                else if (menuid == WinUtil.MENU_ID_PATH)
+                    WinUtil.OnPathMenuItemClick(hwnd);
             }
         }
 
@@ -151,8 +157,7 @@ namespace SystemMenuShell {
         // Others
 
         private void MainForm_Load(object sender, EventArgs e) {
-            // this.TopMost = true;
-            // this.Hide();
+            this.TopMost = true;
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
@@ -164,6 +169,11 @@ namespace SystemMenuShell {
             form.Text = "Test";
             form.TopMost = true;
             form.Show();
+        }
+
+        private void showToolStripMenuItem_Click(object sender, EventArgs e) {
+            // this.Opacity = 1;
+            this.Show();
         }
     }
 }

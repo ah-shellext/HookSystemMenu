@@ -34,6 +34,7 @@ namespace SystemMenuShell {
         public const uint WM_SYSCOMMAND = 0x0112;
         public const uint WM_CREATE = 0x0001;
         public const uint WM_DESTROY = 0x0002;
+        public const uint WM_SHOWWINDOW = 0x0018;
 
         public const uint MF_BYCOMMAND = 0x0000;
 
