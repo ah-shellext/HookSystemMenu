@@ -157,7 +157,18 @@ namespace SystemMenuShell {
         // Others
 
         private void MainForm_Load(object sender, EventArgs e) {
-            this.TopMost = true;
+            ContextMenu ctxMenu = new ContextMenu();
+            ctxMenu.MenuItems.Add(new MenuItem("表示(&S)", new EventHandler((sender2, e2) => {
+                this.Show();
+            })));
+            notifyIcon.ContextMenu = ctxMenu;
+
+            new Thread(new ThreadStart(() => {
+                Thread.Sleep(100);
+                this.Invoke(new Action(() => {
+                    this.Hide();
+                }));
+            })).Start();
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
@@ -169,11 +180,6 @@ namespace SystemMenuShell {
             form.Text = "Test";
             form.TopMost = true;
             form.Show();
-        }
-
-        private void showToolStripMenuItem_Click(object sender, EventArgs e) {
-            // this.Opacity = 1;
-            this.Show();
         }
     }
 }
