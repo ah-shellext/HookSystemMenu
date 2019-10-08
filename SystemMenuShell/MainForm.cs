@@ -156,23 +156,42 @@ namespace SystemMenuShell {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Others
 
+        /// <summary>
+        /// 是否退出程序
+        /// </summary>
+        private bool IsClose = false;
+
         private void MainForm_Load(object sender, EventArgs e) {
             ContextMenu ctxMenu = new ContextMenu();
-            ctxMenu.MenuItems.Add(new MenuItem("表示(&S)", new EventHandler((sender2, e2) => {
-                this.Show();
+            ctxMenu.MenuItems.Add(new MenuItem("モニターを表示(&S)", new EventHandler((sender2, e2) => {
+                Show();
             })));
+            ctxMenu.MenuItems.Add(new MenuItem("ホックを終了(&E)", new EventHandler((sender2, e2) => {
+                IsClose = true;
+                Close();
+            })));
+
+            ctxMenu.MenuItems[0].DefaultItem = true;
             notifyIcon.ContextMenu = ctxMenu;
 
             new Thread(new ThreadStart(() => {
                 Thread.Sleep(100);
-                this.Invoke(new Action(() => {
-                    this.Hide();
-                }));
+                this.Invoke(new Action(() => Hide() ));
             })).Start();
         }
 
-        private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
-            
+        private void notifyIcon_MouseClick(object sender, MouseEventArgs e) {
+            if (e.Button == MouseButtons.Left)
+                notifyIcon.ContextMenu.MenuItems[0].PerformClick();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
+            if (IsClose)
+                e.Cancel = false;
+            else {
+                e.Cancel = true;
+                Hide();
+            }
         }
 
         private void button1_Click(object sender, EventArgs e) {
