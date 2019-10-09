@@ -143,12 +143,18 @@ namespace SystemMenuShell {
             // TODO
             if (message.ToInt64() == NativeConstant.WM_SYSCOMMAND) {
                 uint menuid = (uint)(WParam.ToInt64() & 0x0000FFFF);
-                if (menuid == WinUtil.MENU_ID_TOPMOST)
-                    WinUtil.OnTopMostMenuItemClick(hwnd);
-                else if (menuid == WinUtil.MENU_ID_PRTSC)
-                    WinUtil.OnPrtScMenuItemClick(hwnd);
-                else if (menuid == WinUtil.MENU_ID_PATH)
-                    WinUtil.OnPathMenuItemClick(hwnd);
+
+                switch (menuid) {
+                    case WinUtil.MENU_ID_TOPMOST:
+                        WinUtil.OnTopMostMenuItemClick(hwnd);
+                        break;
+                    case WinUtil.MENU_ID_PRTSC:
+                        WinUtil.OnPrtScMenuItemClick(hwnd);
+                        break;
+                    case WinUtil.MENU_ID_PATH:
+                        WinUtil.OnPathMenuItemClick(hwnd);
+                        break;
+                }
             }
         }
 
@@ -176,7 +182,7 @@ namespace SystemMenuShell {
             this.TopMost = true;
             new Thread(new ThreadStart(() => {
                 Thread.Sleep(100);
-                this.Invoke(new Action(() => Hide() ));
+                // this.Invoke(new Action(() => Hide() ));
             })).Start();
         }
 

@@ -21,11 +21,13 @@ namespace SystemMenuShell {
             IntPtr dsk = NativeMethod.GetDesktopWindow();
             IntPtr owner = NativeMethod.GetWindow(Hwnd, NativeConstant.GW_OWNER);
             IntPtr parent = NativeMethod.GetParent(Hwnd);
-            return
+            string title = GetWindowTitle(Hwnd);
+            return 
+                // !title.Equals("Program Manager");
                 //  NativeMethod.IsWindow(Hwnd)
                 // && owner == IntPtr.Zero
                 // && (parent.Equals(owner) || parent.Equals(dsk))
-                 ((NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_STYLE).ToInt64() & NativeConstant.WS_VISIBLE) != 0);
+                ((NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_STYLE).ToInt64() & NativeConstant.WS_VISIBLE) != 0);
                 // && ((NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOOLWINDOW) == 0);
         }
 
@@ -60,10 +62,8 @@ namespace SystemMenuShell {
 
             IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
 
-            if (hSysMenu == IntPtr.Zero) 
+            if (hSysMenu == IntPtr.Zero)
                 return false;
-
-            // NativeMethod.GetMenuItemCount(hSysMenu);
 
             // Split
             var split_menuitem = new NativeMethod.MENUITEMINFO();
@@ -110,6 +110,7 @@ namespace SystemMenuShell {
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_SPLIT, NativeConstant.MF_BYCOMMAND);
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_TOPMOST, NativeConstant.MF_BYCOMMAND);
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_PRTSC, NativeConstant.MF_BYCOMMAND);
+            NativeMethod.DeleteMenu(hSysMenu, MENU_ID_PATH, NativeConstant.MF_BYCOMMAND);
             
             NativeMethod.GetSystemMenu(Hwnd, true);
         }
@@ -122,6 +123,8 @@ namespace SystemMenuShell {
 
             NativeMethod.CheckMenuItem(hSysMenu, MENU_ID_TOPMOST, NativeConstant.MF_BYCOMMAND | topMost);
         }
+
+#region OnMenuItemClick
 
         // トップにピン(&P)
         public static void OnTopMostMenuItemClick(IntPtr Hwnd) {
@@ -156,24 +159,28 @@ namespace SystemMenuShell {
         // 場所を開く(&O)
         public static void OnPathMenuItemClick(IntPtr Hwnd) {
             try {
-                Process[] allProcess = Process.GetProcesses();
-                Process targetProcess = null;
-                foreach (Process process in allProcess) {
-                    // アクセスが拒否されました。
-                    // if (process.MainWindowHandle == Hwnd || process.Handle == Hwnd) {
-                    if (process.MainWindowHandle == Hwnd) {
-                        targetProcess = process;
-                        break;
-                    }
-                }
-                if (targetProcess != null) 
+                uint pid;
+                NativeMethod.GetWindowThreadProcessId(Hwnd, out pid);
+                if (pid == 0L)
+                    throw new Exception();
+
+                Process targetProcess = Process.GetProcessById((int) pid);
+                if (targetProcess != null)
                     Process.Start("explorer.exe", "/select," + targetProcess.MainModule.FileName);
-                else 
-                    MessageBox.Show("プロセスの場所は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else
+                    throw new Exception();
+
             } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
-                MessageBox.Show("プロセスの場所は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "プロセス (ウィンドウハンドル: 0x" + Hwnd.ToInt64().ToString("X6") + " ) の場所は見つかりません。",
+                    "場所を開く",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error
+                );
             }
         }
+
+#endregion // OnMenuItemClick
+
     }
 }

@@ -69,6 +69,9 @@ namespace SystemMenuShell {
         [DllImport("user32.dll")]
         public static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
 
+        [DllImport("user32.dll")]
+        public static extern bool IsMenu(IntPtr hMenu);
+
         // Hook
 
         [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
@@ -126,5 +129,8 @@ namespace SystemMenuShell {
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
     }
 }
