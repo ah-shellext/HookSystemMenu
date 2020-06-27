@@ -40,7 +40,6 @@ namespace SystemMenuShell {
         public static uint MSG_HCALLWNDPROC_CALLWNDPROC = 0;
         public static uint MSG_HCALLWNDPROC_CALLWNDPROC_PARAMS = 0;
 
-
         public static void RegisterMsg() {
             // Replace
             MSG_HOOKSHELL_REPLACE = NativeMethod.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_SHELL_REPLACE");
@@ -75,5 +74,7 @@ namespace SystemMenuShell {
             MSG_HCALLWNDPROC_CALLWNDPROC = NativeMethod.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_CALLWNDPROC");
             MSG_HCALLWNDPROC_CALLWNDPROC_PARAMS = NativeMethod.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_CALLWNDPROC_PARAMS");
         }
+
+        public static void UnregisterMsg() { }
     }
 }

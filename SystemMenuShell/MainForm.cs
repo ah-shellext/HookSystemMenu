@@ -60,7 +60,10 @@ namespace SystemMenuShell {
             if (title != "") {
                 listBox1.Items.Add(token + ": 0x" + hwnd.ToInt64().ToString("X6") + " " + title);
             }
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            listBox1.ClearSelected();
+            if (listBox1.Items.Count != 0) {
+                listBox1.SetSelected(listBox1.Items.Count - 1, true);
+            }
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +73,12 @@ namespace SystemMenuShell {
         List<IntPtr> currentWinList;
 
         private void onStartHook() {
+            HookMessage.RegisterMsg();
+            HookMethod.InitGetMsgHook(0, Handle);
+            HookMethod.InitCallWndProcHook(0, Handle);
+            HookMethod.InitShellHook(0, Handle);
+            HookMethod.InitCbtHook(0, Handle);
+
             currentWinList = WinUtil.GetAllWindows();
             foreach (var hwnd in currentWinList) {
                 addToList(hwnd, "Exist");
@@ -77,12 +86,6 @@ namespace SystemMenuShell {
                     MenuUtil.InitMenuItemState(hwnd);
                 }
             }
-
-            HookMessage.RegisterMsg();
-            HookMethod.InitGetMsgHook(0, Handle);
-            HookMethod.InitCallWndProcHook(0, Handle);
-            HookMethod.InitShellHook(0, Handle);
-            HookMethod.InitCbtHook(0, Handle);
         }
 
         private void onStopHook() {
@@ -90,9 +93,11 @@ namespace SystemMenuShell {
                 MenuUtil.RemoveSystemMenu(hwnd);
             }
 
-            HookMethod.UnInitGetMsgHook();
-            HookMethod.UnInitShellHook();
             HookMethod.UnInitCbtHook();
+            HookMethod.UnInitShellHook();
+            HookMethod.UnInitCallWndProcHook();
+            HookMethod.UnInitGetMsgHook();
+            HookMessage.UnregisterMsg();
         }
 
         private void onWindowCreated(IntPtr hwnd) {
@@ -131,7 +136,6 @@ namespace SystemMenuShell {
                     MenuUtil.InitMenuItemState(hwnd);
                 }
             }
-
             foreach (var oldHwnd in currentWinList.Except(newList)) {
                 addToList(oldHwnd, "Delete(Act)");
                 MenuUtil.RemoveSystemMenu(oldHwnd);
@@ -140,9 +144,8 @@ namespace SystemMenuShell {
         }
 
         private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {
-            // TODO
             if (message.ToInt64() == NativeConstant.WM_SYSCOMMAND) {
-                uint menuid = (uint)(WParam.ToInt64() & 0x0000FFFF);
+                uint menuid = (uint) (WParam.ToInt64() & 0x0000FFFF);
 
                 switch (menuid) {
                     case MenuUtil.MENU_ID_TOPMOST:

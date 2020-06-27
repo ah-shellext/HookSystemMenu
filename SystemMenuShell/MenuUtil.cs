@@ -19,8 +19,9 @@ namespace SystemMenuShell {
         public const uint MENU_ID_PRTSC = 0xAF03;
         public const uint MENU_ID_PATH = 0xAF04;
 
-        public static bool InsertSystemMenu(IntPtr Hwnd) {
-            IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
+        public static bool InsertSystemMenu(IntPtr hwnd) {
+            NativeMethod.GetSystemMenu(hwnd, true);
+            IntPtr hSysMenu = NativeMethod.GetSystemMenu(hwnd, false);
             if (hSysMenu == IntPtr.Zero) {
                 return false;
             }
@@ -62,8 +63,8 @@ namespace SystemMenuShell {
             return true;
         }
 
-        public static void RemoveSystemMenu(IntPtr Hwnd) {
-            IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
+        public static void RemoveSystemMenu(IntPtr hwnd) {
+            IntPtr hSysMenu = NativeMethod.GetSystemMenu(hwnd, false);
             if (hSysMenu == IntPtr.Zero) {
                 return;
             }
@@ -73,71 +74,46 @@ namespace SystemMenuShell {
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_PRTSC, NativeConstant.MF_BYCOMMAND);
             NativeMethod.DeleteMenu(hSysMenu, MENU_ID_PATH, NativeConstant.MF_BYCOMMAND);
 
-            NativeMethod.GetSystemMenu(Hwnd, true);
+            NativeMethod.GetSystemMenu(hwnd, true);
         }
 
-        public static void InitMenuItemState(IntPtr Hwnd) {
-            IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
-
-            bool isTop = (NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST) != 0;
+        public static void InitMenuItemState(IntPtr hwnd) {
+            bool isTop = WinUtil.IsWindowTopMost(hwnd);
             uint topMost = isTop ? NativeConstant.MFS_CHECKED : NativeConstant.MFS_UNCHECKED;
 
+            IntPtr hSysMenu = NativeMethod.GetSystemMenu(hwnd, false);
             NativeMethod.CheckMenuItem(hSysMenu, MENU_ID_TOPMOST, NativeConstant.MF_BYCOMMAND | topMost);
         }
 
         // トップにピン(&P)
-        public static void OnTopMostMenuItemClick(IntPtr Hwnd) {
-            IntPtr hSysMenu = NativeMethod.GetSystemMenu(Hwnd, false);
-
-            bool isTop = (NativeMethod.GetWindowLong(Hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST) != 0;
+        public static void OnTopMostMenuItemClick(IntPtr hwnd) {
+            bool isTop = (NativeMethod.GetWindowLong(hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST) != 0;
             isTop = !isTop;
-
-            IntPtr handleTopMost = (IntPtr)(-1);
-            IntPtr handleNotTopMost = (IntPtr)(-2);
-
-            IntPtr hWndInsertAfter = isTop ? handleTopMost : handleNotTopMost;
-            NativeMethod.SetWindowPos(Hwnd, hWndInsertAfter, 0, 0, 0, 0, NativeConstant.TOPMOST_FLAGS);
-
-            InitMenuItemState(Hwnd);
+            WinUtil.SetWindowTopMost(hwnd, isTop);
+            InitMenuItemState(hwnd);
         }
 
         // スクリーンショット(&C)
-        public static void OnPrtScMenuItemClick(IntPtr Hwnd) {
-            NativeMethod.Rect rect;
-            NativeMethod.GetWindowRect(Hwnd, out rect);
-            Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
-            using (var graphics = Graphics.FromImage(bitmap)) {
-                IntPtr hdc = graphics.GetHdc();
-                NativeMethod.PrintWindow(Hwnd, hdc, 0);
-                graphics.ReleaseHdc(hdc);
-            }
-            Clipboard.Clear();
-            Clipboard.SetImage(bitmap);
+        public static void OnPrtScMenuItemClick(IntPtr hwnd) {
+            WinUtil.CaptureWindow(hwnd);
         }
 
         // 場所を開く(&O)
-        public static void OnPathMenuItemClick(IntPtr Hwnd) {
-            try {
-                uint pid;
-                NativeMethod.GetWindowThreadProcessId(Hwnd, out pid);
-                if (pid == 0L)
-                    throw new Exception();
+        public static void OnPathMenuItemClick(IntPtr hwnd) {
+            String hstr = "0x" + hwnd.ToInt64().ToString("X6");
+            uint pid;
+            NativeMethod.GetWindowThreadProcessId(hwnd, out pid);
+            if (pid == 0L) {
+                MessageBox.Show("プロセス (Win: " + hstr + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-                Process targetProcess = Process.GetProcessById((int)pid);
-                if (targetProcess != null)
-                    Process.Start("explorer.exe", "/select," + targetProcess.MainModule.FileName);
-                else
-                    throw new Exception();
-
-            } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
-                MessageBox.Show(
-                    "プロセス (ウィンドウハンドル: 0x" + Hwnd.ToInt64().ToString("X6") + " ) の場所は見つかりません。",
-                    "場所を開く",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error
-                );
+            Process targetProcess = Process.GetProcessById((int) pid);
+            if (targetProcess != null) {
+                Process.Start("explorer.exe", "/select," + targetProcess.MainModule.FileName);
+            } else {
+                MessageBox.Show("プロセス (pid: " + pid + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
     }
 }

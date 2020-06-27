@@ -46,11 +46,38 @@ namespace SystemMenuShell {
             return hwnds;
         }
 
-        public static string GetWindowTitle(IntPtr Hwnd) {
-            int length = NativeMethod.GetWindowTextLength(Hwnd);
+        public static string GetWindowTitle(IntPtr hwnd) {
+            int length = NativeMethod.GetWindowTextLength(hwnd);
             StringBuilder windowName = new StringBuilder(length + 1);
-            NativeMethod.GetWindowText(Hwnd, windowName, windowName.Capacity);
+            NativeMethod.GetWindowText(hwnd, windowName, windowName.Capacity);
             return windowName.ToString();
+        }
+
+        public static bool IsWindowTopMost(IntPtr hwnd) {
+            var flag = NativeMethod.GetWindowLong(hwnd, NativeConstant.GWL_EXSTYLE).ToInt64() & NativeConstant.WS_EX_TOPMOST;
+            return flag != 0;
+        }
+
+        public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
+            var handleTopMost = (IntPtr) (-1);
+            var handleNotTopMost = (IntPtr) (-2);
+            var after = topMost ? handleTopMost : handleNotTopMost;
+
+            var flag = NativeConstant.SWP_NOOWNERZORDER | NativeConstant.SWP_NOACTIVATE | NativeConstant.SWP_NOMOVE | NativeConstant.SWP_NOSIZE;
+            NativeMethod.SetWindowPos(hwnd, after, 0, 0, 0, 0, flag);
+        }
+
+        public static void CaptureWindow(IntPtr hwnd) {
+            NativeMethod.Rect rect;
+            NativeMethod.GetWindowRect(hwnd, out rect);
+            Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+            using (var graphics = Graphics.FromImage(bitmap)) {
+                IntPtr hdc = graphics.GetHdc();
+                NativeMethod.PrintWindow(hwnd, hdc, 0);
+                graphics.ReleaseHdc(hdc);
+            }
+            Clipboard.Clear();
+            Clipboard.SetImage(bitmap);
         }
     }
 }
