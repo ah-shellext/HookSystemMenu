@@ -14,9 +14,6 @@ namespace SystemMenuShell {
 
     public partial class MainForm : Form {
 
-        // wID
-        private const uint MENU_ID_03 = 0x0003;
-
         public MainForm() {
             InitializeComponent();
         }
@@ -26,27 +23,24 @@ namespace SystemMenuShell {
 
             // Init Hook:
             // 間違ったフォーマットのプログラムを読み込もうとしました。
-
-            if (m.Msg == NativeConstant.WM_CREATE)
+            if (m.Msg == NativeConstant.WM_CREATE) {
                 onStartHook();
-            else if (m.Msg == NativeConstant.WM_DESTROY)
+            } else if (m.Msg == NativeConstant.WM_DESTROY) {
                 onStopHook();
-            else if (m.Msg == NativeConstant.WM_SHOWWINDOW) {
+            } else if (m.Msg == NativeConstant.WM_SHOWWINDOW) {
                 this.Hide();
-                // this.Opacity = 0;
             }
             
             // Proc Shell Hook Msg:
-
-            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED || m.Msg == HookMessage.MSG_HCBT_CREATEWND)
-                onWindowCreated(m.WParam);
-            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED || m.Msg == HookMessage.MSG_HCBT_DESTROYWND)
+            if (m.Msg == HookMessage.MSG_HSHELL_WINDOWCREATED || m.Msg == HookMessage.MSG_HCBT_CREATEWND) {
+                onWindowCreated(m.WParam); 
+            } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWDESTROYED || m.Msg == HookMessage.MSG_HCBT_DESTROYWND) { 
                 onWindowDestroyed(m.WParam);
-            else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED || m.Msg == HookMessage.MSG_HCBT_ACTIVATE || m.Msg == HookMessage.MSG_HCBT_SETFOCUS)
-                onWindowActivated(m.WParam);
+            } else if (m.Msg == HookMessage.MSG_HSHELL_WINDOWACTIVATED || m.Msg == HookMessage.MSG_HCBT_ACTIVATE || m.Msg == HookMessage.MSG_HCBT_SETFOCUS) { 
+                onWindowActivated(m.WParam); 
+            }
 
             // Proc GetMsg Hook Msg:
-
             if (m.Msg == HookMessage.MSG_HGETMSG_GETMSG) {
                 addToList(m.WParam, "GetMsg");
                 WinUtil.cacheHandle = m.WParam;
@@ -60,26 +54,31 @@ namespace SystemMenuShell {
             }
         }
 
+        // ui
         private void addToList(IntPtr hwnd, string token) {
             string title = WinUtil.GetWindowTitle(hwnd);
-            if (title != "") listBox1.Items.Add(token + ": 0x" + hwnd.ToInt64().ToString("X6") + " " + title);
+            if (title != "") {
+                listBox1.Items.Add(token + ": 0x" + hwnd.ToInt64().ToString("X6") + " " + title);
+            }
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Handle events
-        List<IntPtr> WinList;
+
+        // current windows
+        List<IntPtr> currentWinList;
 
         private void onStartHook() {
-            WinList = WinUtil.GetAllWindows();
-            foreach (var hwnd in WinList) {
+            currentWinList = WinUtil.GetAllWindows();
+            foreach (var hwnd in currentWinList) {
                 addToList(hwnd, "Exist");
-                if (WinUtil.InsertSystemMenu(hwnd))
-                    WinUtil.InitMenuItemState(hwnd);
+                if (MenuUtil.InsertSystemMenu(hwnd)) {
+                    MenuUtil.InitMenuItemState(hwnd);
+                }
             }
 
             HookMessage.RegisterMsg();
-
             HookMethod.InitGetMsgHook(0, Handle);
             HookMethod.InitCallWndProcHook(0, Handle);
             HookMethod.InitShellHook(0, Handle);
@@ -87,8 +86,8 @@ namespace SystemMenuShell {
         }
 
         private void onStopHook() {
-            foreach (var hwnd in WinList) {
-                WinUtil.RemoveSystemMenu(hwnd);
+            foreach (var hwnd in currentWinList) {
+                MenuUtil.RemoveSystemMenu(hwnd);
             }
 
             HookMethod.UnInitGetMsgHook();
@@ -99,44 +98,45 @@ namespace SystemMenuShell {
         private void onWindowCreated(IntPtr hwnd) {
             var newList = WinUtil.GetAllWindows();
             button1.Text = "Cre " + newList.Count.ToString();
-            foreach (var newHwnd in newList.Except(WinList)) {
+            foreach (var newHwnd in newList.Except(currentWinList)) {
                 addToList(newHwnd, "Create");
-                if (WinUtil.InsertSystemMenu(hwnd)) {
-                    WinUtil.InitMenuItemState(hwnd);
+                if (MenuUtil.InsertSystemMenu(hwnd)) {
+                    MenuUtil.InitMenuItemState(hwnd);
                  }
             }
-            WinList = newList;
+            currentWinList = newList;
         }
 
         private void onWindowDestroyed(IntPtr hwnd) {
             var newList = WinUtil.GetAllWindows();
             button1.Text = "Des " + newList.Count.ToString();
-            foreach (var oldHwnd in WinList.Except(newList)) {
+            foreach (var oldHwnd in currentWinList.Except(newList)) {
                 addToList(oldHwnd, "Delete");
-                WinUtil.RemoveSystemMenu(hwnd);
+                MenuUtil.RemoveSystemMenu(hwnd);
             }
-            WinList = newList;
+            currentWinList = newList;
         }
 
         private void onWindowActivated(IntPtr hwnd) {
-            if (WinUtil.IsWindow(hwnd))
-                WinUtil.InitMenuItemState(hwnd);
+            if (WinUtil.IsWindow(hwnd)) {
+                MenuUtil.InitMenuItemState(hwnd);
+            }
 
             var newList = WinUtil.GetAllWindows();
             button1.Text = "Act " + newList.Count.ToString();
 
-            foreach (var newHwnd in newList.Except(WinList)) {
+            foreach (var newHwnd in newList.Except(currentWinList)) {
                 addToList(newHwnd, "Create(Act)");
-                if (WinUtil.InsertSystemMenu(hwnd)) {
-                    WinUtil.InitMenuItemState(hwnd);
+                if (MenuUtil.InsertSystemMenu(hwnd)) {
+                    MenuUtil.InitMenuItemState(hwnd);
                 }
             }
 
-            foreach (var oldHwnd in WinList.Except(newList)) {
+            foreach (var oldHwnd in currentWinList.Except(newList)) {
                 addToList(oldHwnd, "Delete(Act)");
-                WinUtil.RemoveSystemMenu(oldHwnd);
+                MenuUtil.RemoveSystemMenu(oldHwnd);
             }
-            WinList = newList;
+            currentWinList = newList;
         }
 
         private void onWinProcMsg(IntPtr hwnd, IntPtr message, IntPtr WParam, IntPtr LParam) {
@@ -145,14 +145,14 @@ namespace SystemMenuShell {
                 uint menuid = (uint)(WParam.ToInt64() & 0x0000FFFF);
 
                 switch (menuid) {
-                    case WinUtil.MENU_ID_TOPMOST:
-                        WinUtil.OnTopMostMenuItemClick(hwnd);
+                    case MenuUtil.MENU_ID_TOPMOST:
+                        MenuUtil.OnTopMostMenuItemClick(hwnd);
                         break;
-                    case WinUtil.MENU_ID_PRTSC:
-                        WinUtil.OnPrtScMenuItemClick(hwnd);
+                    case MenuUtil.MENU_ID_PRTSC:
+                        MenuUtil.OnPrtScMenuItemClick(hwnd);
                         break;
-                    case WinUtil.MENU_ID_PATH:
-                        WinUtil.OnPathMenuItemClick(hwnd);
+                    case MenuUtil.MENU_ID_PATH:
+                        MenuUtil.OnPathMenuItemClick(hwnd);
                         break;
                 }
             }
@@ -161,10 +161,7 @@ namespace SystemMenuShell {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Others
 
-        /// <summary>
-        /// 是否退出程序
-        /// </summary>
-        private bool IsClose = false;
+        private bool hookStoped = false;
 
         private void MainForm_Load(object sender, EventArgs e) {
             ContextMenu ctxMenu = new ContextMenu();
@@ -172,7 +169,7 @@ namespace SystemMenuShell {
                 Show();
             })));
             ctxMenu.MenuItems.Add(new MenuItem("ホックを終了(&E)", new EventHandler((sender2, e2) => {
-                IsClose = true;
+                hookStoped = true;
                 Close();
             })));
 
@@ -187,14 +184,15 @@ namespace SystemMenuShell {
         }
 
         private void notifyIcon_MouseClick(object sender, MouseEventArgs e) {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left) {
                 notifyIcon.ContextMenu.MenuItems[0].PerformClick();
+            }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-            if (IsClose)
+            if (hookStoped) {
                 e.Cancel = false;
-            else {
+            } else {
                 e.Cancel = true;
                 Hide();
             }

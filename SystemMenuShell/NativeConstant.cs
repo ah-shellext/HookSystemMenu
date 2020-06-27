@@ -39,7 +39,6 @@ namespace SystemMenuShell {
         public const uint MF_BYCOMMAND = 0x0000;
 
         // UCMD
-
         public const uint GW_HWNDFIRST = 0;
         public const uint GW_HWNDLAST = 1;
         public const uint GW_HWNDNEXT = 2;
@@ -49,7 +48,6 @@ namespace SystemMenuShell {
         public const uint GW_ENABLEDPOPUP = 6;
 
         // Window Long Param
-
         public const int GWL_WNDPROC = -4;
         public const int GWL_HINSTANCE = -6;
         public const int GWL_HWNDPARENT = -8;
@@ -59,13 +57,11 @@ namespace SystemMenuShell {
         public const int GWL_ID = -12;
 
         // Window styles
-
         public const uint WS_VISIBLE = 0x10000000;
         public const uint WS_EX_TOOLWINDOW = 0x00000080;
         public const uint WS_EX_TOPMOST = 0x00000008;
 
         // SetWindowPos Flags
-
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOMOVE = 0x0002;
         public const uint TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;

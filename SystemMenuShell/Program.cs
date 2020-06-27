@@ -26,8 +26,9 @@ namespace SystemMenuShell {
                     int currentProcessThreadId = currentProcess.GetMainThreadId();
                     IntPtr processDesktop = NativeMethod.GetThreadDesktop(processThreadId);
                     IntPtr currentProcessDesktop = NativeMethod.GetThreadDesktop(currentProcessThreadId);
-                    if (currentProcessDesktop == processDesktop)
+                    if (currentProcessDesktop == processDesktop) {
                         return true;
+                    }
                 }
             }
             return false;
@@ -38,8 +39,9 @@ namespace SystemMenuShell {
         /// </summary>
         [STAThread]
         static void Main() {
-            if (ExistProcessWithSameNameAndDesktop(Process.GetCurrentProcess()))
+            if (ExistProcessWithSameNameAndDesktop(Process.GetCurrentProcess())) {
                 return;
+            }
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

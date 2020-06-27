@@ -9,7 +9,6 @@ namespace SystemMenuShell {
     static class NativeMethod {
 
         // https://www.pinvoke.net/default.aspx/user32/GetWindowRect.html
-
         // http://chokuto.ifdef.jp/urawaza/struct/MENUITEMINFO.html
 
         [StructLayout(LayoutKind.Sequential)]
@@ -44,7 +43,6 @@ namespace SystemMenuShell {
         }
 
         // Menu
-
         [DllImport("user32.dll")]
         public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
 
@@ -73,12 +71,10 @@ namespace SystemMenuShell {
         public static extern bool IsMenu(IntPtr hMenu);
 
         // Hook
-
         [DllImport("user32.dll", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
         public static extern int RegisterShellHookWindow(IntPtr hWnd);
 
         // Message
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint RegisterWindowMessage(string lpString);
 
@@ -86,7 +82,6 @@ namespace SystemMenuShell {
         public static extern bool SendNotifyMessage(int hWnd, uint Msg, int wParam, int lParam);
 
         // Window
-
         [DllImport("user32.dll")]
         public static extern IntPtr GetThreadDesktop(int threadId);
 

@@ -8,14 +8,12 @@ namespace SystemMenuShell {
     static class HookMessage {
 
         // Replace
-
         public static uint MSG_HOOKSHELL_REPLACE = 0;
         public static uint MSG_HOOKCBT_REPLACE = 0;
         public static uint MSG_HOOKGETMSG_REPLACE = 0;
         public static uint MSG_HOOKCALLWNDPROC_REPLACE = 0;
 
         // Shell
-
         public static uint MSG_HSHELL_ACTIVATESHELLWINDOW = 0;
         public static uint MSG_HSHELL_GETMINRECT = 0;
         public static uint MSG_HSHELL_LANGUAGE = 0;
@@ -26,7 +24,6 @@ namespace SystemMenuShell {
         public static uint MSG_HSHELL_WINDOWDESTROYED = 0;
 
         // Cbt
-
         public static uint MSG_HCBT_ACTIVATE = 0;
         public static uint MSG_HCBT_CREATEWND = 0;
         public static uint MSG_HCBT_DESTROYWND = 0;
@@ -36,12 +33,10 @@ namespace SystemMenuShell {
         public static uint MSG_HCBT_SYSCOMMAND = 0;
 
         // GetMsg
-
         public static uint MSG_HGETMSG_GETMSG = 0;
         public static uint MSG_HGETMSG_GETMSG_PARAMS = 0;
 
         // CallWndProc
-
         public static uint MSG_HCALLWNDPROC_CALLWNDPROC = 0;
         public static uint MSG_HCALLWNDPROC_CALLWNDPROC_PARAMS = 0;
 
