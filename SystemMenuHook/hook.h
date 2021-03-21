@@ -30,9 +30,23 @@ const wchar_t *WcsHShellAppCommand = L"AH_SYSTEM_MENU_HOOK_HSHELL_APPCOMMAND";
 const wchar_t *WcsHShellWindowReplaced = L"AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWREPLACED";
 
 const wchar_t *WcsCbtReplaced = L"AH_SYSTEM_MENU_HOOK_CBT_REPLACED";
+const wchar_t *WcsHCbtMoveSize = L"AH_SYSTEM_MENU_HOOK_HCBT_MOVESIZE";
+const wchar_t *WcsHCbtMinMax = L"AH_SYSTEM_MENU_HOOK_HCBT_MINMAX";
+const wchar_t *WcsHCbtQs = L"AH_SYSTEM_MENU_HOOK_HCBT_QS";
+const wchar_t *WcsHCbtCreateWnd = L"AH_SYSTEM_MENU_HOOK_HCBT_CREATEWND";
+const wchar_t *WcsHCbtDestroyWnd = L"AH_SYSTEM_MENU_HOOK_HCBT_DESTROYWND";
+const wchar_t *WcsHCbtActivate = L"AH_SYSTEM_MENU_HOOK_HCBT_ACTIVATE";
+const wchar_t *WcsHCbtClickSkipped = L"AH_SYSTEM_MENU_HOOK_HCBT_CLICKSKIPPED";
+const wchar_t *WcsHCbtKeySkipped = L"AH_SYSTEM_MENU_HOOK_HCBT_KEYSKIPPED";
+const wchar_t *WcsHCbtSysCommand = L"AH_SYSTEM_MENU_HOOK_HCBT_SYSCOMMAND";
+const wchar_t *WcsHCbtSetFocus = L"AH_SYSTEM_MENU_HOOK_HCBT_SETFOCUS";
 
 const wchar_t *WcsGetMessageReplaced = L"AH_SYSTEM_MENU_HOOK_GETMESSAGE_REPLACED";
+const wchar_t *WcsGetMessage = L"AH_SYSTEM_MENU_HOOK_GETMESSAGE";
+const wchar_t *WcsGetMessageParams = L"AH_SYSTEM_MENU_HOOK_GETMESSAGE_PARAMS";
 
 const wchar_t *WcsCallWndProcReplaced = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC_REPLACED";
+const wchar_t *WcsCallWndProc = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC";
+const wchar_t *WcsCallWndProcParams = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC_PARAMS";
 
 #endif // HOOK_H
