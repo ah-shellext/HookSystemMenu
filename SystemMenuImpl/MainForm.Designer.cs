@@ -1,6 +1,6 @@
 ﻿
 namespace SystemMenuImpl {
-    partial class Form1 {
+    partial class MainForm {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -24,10 +24,17 @@ namespace SystemMenuImpl {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(305, 294);
+            this.Name = "MainForm";
+            this.Text = "MainForm";
+            this.ResumeLayout(false);
+
         }
 
         #endregion
