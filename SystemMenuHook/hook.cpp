@@ -14,10 +14,10 @@ HHOOK hookCallWndProc = NULL;
 #pragma data_seg()
 #pragma comment(linker, "/section:.Shared,rws")
 
-static LRESULT CALLBACK ShellHookCallback(int, WPARAM, LPARAM);
-static LRESULT CALLBACK CbtHookCallback(int, WPARAM, LPARAM);
-static LRESULT CALLBACK GetMessageHookCallback(int, WPARAM, LPARAM);
-static LRESULT CALLBACK CallWndProcHookCallback(int, WPARAM, LPARAM);
+static LRESULT __stdcall ShellHookCallback(int, WPARAM, LPARAM);
+static LRESULT __stdcall CbtHookCallback(int, WPARAM, LPARAM);
+static LRESULT __stdcall GetMessageHookCallback(int, WPARAM, LPARAM);
+static LRESULT __stdcall CallWndProcHookCallback(int, WPARAM, LPARAM);
 
 // WH_SHELL
 
@@ -46,37 +46,48 @@ DLLEXPORT void __stdcall UninitializeShellHook() {
     hookShell = NULL;
 }
 
-static LRESULT CALLBACK ShellHookCallback(int code, WPARAM wparam, LPARAM lparam) {
-    if (code >= 0) {
+static LRESULT __stdcall ShellHookCallback(int code, WPARAM wparam, LPARAM lparam) {
+    if (hwndDestnation != NULL && code >= 0) {
         LPCWSTR wcs;
         switch (code) {
         case HSHELL_WINDOWCREATED:
             wcs = WcsHShellWindowCreated;
+            break;
         case HSHELL_WINDOWDESTROYED:
             wcs = WcsHShellWindowDestroyed;
+            break;
         case HSHELL_ACTIVATESHELLWINDOW:
             wcs = WcsHShellActivateShellWindow;
+            break;
         case HSHELL_WINDOWACTIVATED:
             wcs = WcsHShellWindowActivated;
+            break;
         case HSHELL_GETMINRECT:
             wcs = WcsHShellGetMinRect;
+            break;
         case HSHELL_REDRAW:
             wcs = WcsHShellRedraw;
+            break;
         case HSHELL_TASKMAN:
             wcs = WcsHShellTaskman;
+            break;
         case HSHELL_LANGUAGE:
             wcs = WcsHShellLanguage;
+            break;
         case HSHELL_ACCESSIBILITYSTATE:
             wcs = WcsHShellAccessibilityState;
+            break;
         case HSHELL_APPCOMMAND:
             wcs = WcsHShellAppCommand;
+            break;
         case HSHELL_WINDOWREPLACED:
             wcs = WcsHShellWindowReplaced;
+            break;
         default:
             wcs = NULL;
         }
 
-        if (hwndDestnation != NULL && wcs != NULL) {
+        if (wcs != NULL) {
             UINT msg = RegisterWindowMessage(wcs);
             if (msg != 0) {
                 SendNotifyMessage(hwndDestnation, msg, wparam, lparam);
@@ -110,38 +121,49 @@ DLLEXPORT void __stdcall UninitializeCbtHook() {
     if (hookCbt != NULL) {
         UnhookWindowsHookEx(hookCbt);
     }
+
     hookCbt = NULL;
 }
 
-static LRESULT CALLBACK CbtHookCallback(int code, WPARAM wparam, LPARAM lparam) {
-    if (code >= 0) {
+static LRESULT __stdcall CbtHookCallback(int code, WPARAM wparam, LPARAM lparam) {
+    if (hwndDestnation != NULL && code >= 0) {
         LPCWSTR wcs;
         switch (code) {
         case HCBT_MOVESIZE:
             wcs = WcsHCbtMoveSize;
+            break;
         case HCBT_MINMAX:
             wcs = WcsHCbtMinMax;
+            break;
         case HCBT_QS:
             wcs = WcsHCbtQs;
+            break;
         case HCBT_CREATEWND:
             wcs = WcsHCbtCreateWnd;
+            break;
         case HCBT_DESTROYWND:
             wcs = WcsHCbtDestroyWnd;
+            break;
         case HCBT_ACTIVATE:
             wcs = WcsHCbtActivate;
+            break;
         case HCBT_CLICKSKIPPED:
             wcs = WcsHCbtClickSkipped;
+            break;
         case HCBT_KEYSKIPPED:
             wcs = WcsHCbtKeySkipped;
+            break;
         case HCBT_SYSCOMMAND:
             wcs = WcsHCbtSysCommand;
+            break;
         case HCBT_SETFOCUS:
             wcs = WcsHCbtSetFocus;
+            break;
         default:
             wcs = NULL;
         }
 
-        if (hwndDestnation != NULL && wcs != NULL) {
+        if (wcs != NULL) {
             UINT msg = RegisterWindowMessage(wcs);
             if (msg != 0) {
                 SendNotifyMessage(hwndDestnation, msg, wparam, lparam);
@@ -149,7 +171,7 @@ static LRESULT CALLBACK CbtHookCallback(int code, WPARAM wparam, LPARAM lparam) 
         }
     }
 
-    return CallNextHookEx(hookShell, code, wparam, lparam);
+    return CallNextHookEx(hookCbt, code, wparam, lparam);
 }
 
 // WH_GETMESSAGE
@@ -175,11 +197,12 @@ DLLEXPORT void __stdcall UninitializeGetMessageHook() {
     if (hookGetMessage != NULL) {
         UnhookWindowsHookEx(hookGetMessage);
     }
+
     hookGetMessage = NULL;
 }
 
-static LRESULT CALLBACK GetMessageHookCallback(int code, WPARAM wparam, LPARAM lparam) {
-    if (code >= 0) {
+static LRESULT __stdcall GetMessageHookCallback(int code, WPARAM wparam, LPARAM lparam) {
+    if (hwndDestnation != NULL && code >= 0) {
         UINT msg = RegisterWindowMessage(WcsGetMessage);
         UINT msgParams = RegisterWindowMessage(WcsGetMessageParams);
 
@@ -220,11 +243,12 @@ DLLEXPORT void __stdcall UninitializeCallWndProcHook() {
     if (hookCallWndProc != NULL) {
         UnhookWindowsHookEx(hookCallWndProc);
     }
+
     hookCallWndProc = NULL;
 }
 
-static LRESULT CALLBACK CallWndProcHookCallback(int code, WPARAM wparam, LPARAM lparam) {
-    if (code >= 0) {
+static LRESULT __stdcall CallWndProcHookCallback(int code, WPARAM wparam, LPARAM lparam) {
+    if (hwndDestnation != NULL && code >= 0) {
         UINT msg = RegisterWindowMessage(WcsCallWndProc);
         UINT msgParams = RegisterWindowMessage(WcsCallWndProcParams);
 

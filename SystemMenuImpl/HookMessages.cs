@@ -1,4 +1,6 @@
-﻿namespace SystemMenuImpl {
+﻿using System.Windows.Forms;
+
+namespace SystemMenuImpl {
 
     class HookMessages {
 
@@ -11,6 +13,10 @@
         public static uint MSG_HCBT_ACTIVATE = 0;
 
         public static void RegisterMessages() {
+            var m1 = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWCREATED");
+            var m2 = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWCREATED");
+            var m3 = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWCREATED");
+
             MSG_HSHELL_WINDOWCREATED = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWCREATED");
             MSG_HSHELL_WINDOWDESTROYED = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWDESTROYED");
             MSG_HSHELL_WINDOWACTIVATED = NativeMethods.RegisterWindowMessage("AH_SYSTEM_MENU_HOOK_HSHELL_WINDOWACTIVATED");

@@ -2,7 +2,8 @@
 
     class NativeConstants {
 
-        public const uint WM_CREATE = 0x0001;
-        public const uint WM_DESTROY = 0x0002;
+        public const uint GW_OWNER = 4;
+        public const int GWL_STYLE = -16;
+        public const uint WS_VISIBLE = 0x10000000;
     }
 }

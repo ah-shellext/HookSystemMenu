@@ -11,14 +11,15 @@ namespace SystemMenuImpl {
 
         [STAThread]
         static void Main() {
-            if (!mutex.WaitOne(TimeSpan.FromSeconds(2), false)) {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            if (!mutex.WaitOne(TimeSpan.FromSeconds(1), false)) {
                 MessageBox.Show("Application already started!", "HookSystemMenu", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             try {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new MainForm());
             } finally {
                 mutex.ReleaseMutex();

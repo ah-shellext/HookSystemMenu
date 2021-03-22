@@ -5,8 +5,6 @@
 
 #define DLLEXPORT extern "C" __declspec(dllexport)
 
-typedef void (CALLBACK *HookProc)(int code, WPARAM w, LPARAM l);
-
 DLLEXPORT bool __stdcall InitializeShellHook(int threadId, HWND destination);
 DLLEXPORT void __stdcall UninitializeShellHook();
 DLLEXPORT bool __stdcall InitializeCbtHook(int threadId, HWND destination);
@@ -48,5 +46,9 @@ const wchar_t *WcsGetMessageParams = L"AH_SYSTEM_MENU_HOOK_GETMESSAGE_PARAMS";
 const wchar_t *WcsCallWndProcReplaced = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC_REPLACED";
 const wchar_t *WcsCallWndProc = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC";
 const wchar_t *WcsCallWndProcParams = L"AH_SYSTEM_MENU_HOOK_CALLWNDPROC_PARAMS";
+
+inline void ShowNullModuleInstanceMessage() {
+    MessageBox(NULL, L"You do not register the dll yet!", L"HookSystemMenu", MB_OK | MB_ICONERROR);
+}
 
 #endif // HOOK_H
