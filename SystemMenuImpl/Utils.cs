@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 
 namespace SystemMenuImpl {
 
@@ -7,17 +12,29 @@ namespace SystemMenuImpl {
 
         public static string GetWindowTitle(IntPtr hwnd) {
             int length = NativeMethods.GetWindowTextLength(hwnd);
-            StringBuilder windowName = new StringBuilder(length + 1);
+            var windowName = new StringBuilder(length + 1);
             NativeMethods.GetWindowText(hwnd, windowName, windowName.Capacity);
             return windowName.ToString();
         }
 
-        public static bool IsWindow(IntPtr hWnd) {
+        public static bool IsWindow(IntPtr hwnd, bool more = false) {
+            string title = GetWindowTitle(hwnd);
             IntPtr dsk = NativeMethods.GetDesktopWindow();
-            IntPtr owner = NativeMethods.GetWindow(hWnd, NativeConstants.GW_OWNER);
-            IntPtr parent = NativeMethods.GetParent(hWnd);
-            string title = GetWindowTitle(hWnd);
-            return (NativeMethods.GetWindowLong(hWnd, NativeConstants.GWL_STYLE).ToInt64() & NativeConstants.WS_VISIBLE) != 0;
+            IntPtr owner = NativeMethods.GetWindow(hwnd, NativeConstants.GW_OWNER);
+            IntPtr parent = NativeMethods.GetParent(hwnd);
+            return !string.IsNullOrEmpty(title) && title != "Program Manager"
+                && owner == IntPtr.Zero && (parent != owner || parent != dsk)
+                && NativeMethods.IsWindow(hwnd) && (more || NativeMethods.IsWindowVisible(hwnd))
+                && (more || (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_STYLE).ToInt64() & NativeConstants.WS_VISIBLE) != 0)
+                && (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_EXSTYLE).ToInt64() & NativeConstants.WS_EX_TOOLWINDOW) == 0;
+        }
+        public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
+            var handleTopMost = (IntPtr) (-1);
+            var handleNotTopMost = (IntPtr) (-2);
+            var after = topMost ? handleTopMost : handleNotTopMost;
+
+            var flag = NativeConstants.SWP_NOOWNERZORDER | NativeConstants.SWP_NOACTIVATE | NativeConstants.SWP_NOMOVE | NativeConstants.SWP_NOSIZE;
+            NativeMethods.SetWindowPos(hwnd, after, 0, 0, 0, 0, flag);
         }
     }
 }

@@ -1,18 +1,16 @@
 #include "pch.h"
 #include "hook.h"
 
-HINSTANCE hModuleInstance = NULL;
-
 #pragma data_seg(".Shared")
-
 HWND hwndDestnation = NULL;
 HHOOK hookShell = NULL;
 HHOOK hookCbt = NULL;
 HHOOK hookGetMessage = NULL;
 HHOOK hookCallWndProc = NULL;
-
 #pragma data_seg()
 #pragma comment(linker, "/section:.Shared,rws")
+
+HINSTANCE hModuleInstance = NULL;
 
 static LRESULT __stdcall ShellHookCallback(int, WPARAM, LPARAM);
 static LRESULT __stdcall CbtHookCallback(int, WPARAM, LPARAM);

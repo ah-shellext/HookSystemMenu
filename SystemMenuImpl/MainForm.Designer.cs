@@ -35,7 +35,7 @@ namespace SystemMenuImpl {
             this.lbMessages.FormattingEnabled = true;
             this.lbMessages.HorizontalScrollbar = true;
             this.lbMessages.IntegralHeight = false;
-            this.lbMessages.ItemHeight = 12;
+            this.lbMessages.ItemHeight = 15;
             this.lbMessages.Location = new System.Drawing.Point(12, 12);
             this.lbMessages.Name = "lbMessages";
             this.lbMessages.ScrollAlwaysVisible = true;
