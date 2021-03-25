@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
 namespace SystemMenuImpl {
 
     class Utils {
 
-        public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
+        public static void SetWindowTopMost(IntPtr hwnd, bool topMost) {
             var handleTopMost = (IntPtr) (-1);
             var handleNotTopMost = (IntPtr) (-2);
             var after = topMost ? handleTopMost : handleNotTopMost;
@@ -70,7 +68,7 @@ namespace SystemMenuImpl {
                 }
                 hwnd = NativeMethods.GetWindow(hwnd, NativeConstants.GW_HWNDNEXT);
             }
-            return hwnds;
+            return hwnds.Distinct().ToList();
         }
 
         public static bool IsWindowTopMost(IntPtr hwnd) {

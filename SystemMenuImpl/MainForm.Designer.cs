@@ -24,7 +24,10 @@ namespace SystemMenuImpl {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.lbMessages = new System.Windows.Forms.ListBox();
+            this.ntfIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.SuspendLayout();
             // 
             // lbMessages
@@ -41,6 +44,12 @@ namespace SystemMenuImpl {
             this.lbMessages.ScrollAlwaysVisible = true;
             this.lbMessages.Size = new System.Drawing.Size(281, 270);
             this.lbMessages.TabIndex = 0;
+            // 
+            // ntfIcon
+            // 
+            this.ntfIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("ntfIcon.Icon")));
+            this.ntfIcon.Text = "HookSystemMenu";
+            this.ntfIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NtfIcon_MouseDoubleClick);
             // 
             // MainForm
             // 
@@ -59,6 +68,7 @@ namespace SystemMenuImpl {
         #endregion
 
         private System.Windows.Forms.ListBox lbMessages;
+        private System.Windows.Forms.NotifyIcon ntfIcon;
     }
 }
 

@@ -53,6 +53,9 @@ namespace SystemMenuImpl {
         [DllImport("user32.dll")]
         public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
 
+        [DllImport("user32.dll")]
+        public static extern int GetMenuItemCount(IntPtr hMenu);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct MENUITEMINFO {
             public uint cbSize;
@@ -68,7 +71,7 @@ namespace SystemMenuImpl {
             public uint cch;
             public IntPtr hbmpItem;
 
-            public static uint sizeOf {
+            public static uint SizeOf {
                 get { return (uint) Marshal.SizeOf(typeof(MENUITEMINFO)); }
             }
         }
@@ -82,7 +85,27 @@ namespace SystemMenuImpl {
         [DllImport("user32.dll")]
         public static extern uint CheckMenuItem(IntPtr hmenu, uint uItem, uint uCheck);
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Rect {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+
+            public int Width { get { return Right - Left; } }
+            public int Height { get { return Bottom - Top; } }
+        }
+
         [DllImport("user32.dll")]
-        public static extern uint GetMenuState(IntPtr hmenu, uint uItem, uint uFlags);
+        public static extern bool GetWindowRect(IntPtr handle, out Rect lpRect);
+
+        [DllImport("user32.dll")]
+        public static extern bool PrintWindow(IntPtr handle, IntPtr hdc, int nFlags);
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] uint dwFlags, [Out] StringBuilder lpExeName, [In, Out] ref uint lpdwSize);
     }
 }

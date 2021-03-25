@@ -1,36 +1,68 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Text;
+using System.Windows.Forms;
 
 namespace SystemMenuImpl {
 
     class SystemMenu {
 
-        public const uint MENUID_SPLITTER = 0xAF01;
-        public const uint MENUID_TOPMOST = 0xAF02;
+        public const uint MENUID_START = 0xA5F8;
+        public const uint MENUID_SPLITTER = MENUID_START + 1;
+        public const uint MENUID_TOPMOST = MENUID_START + 2;
+        public const uint MENUID_SENDTOBACK = MENUID_START + 3;
+        public const uint MENUID_COPYSCREENSHOT = MENUID_START + 4;
+        public const uint MENUID_OPENPROCESSPATH = MENUID_START + 5;
 
         public static bool InsertSystmMenu(IntPtr hwnd) {
-            NativeMethods.GetSystemMenu(hwnd, true);
             IntPtr sysMenu = NativeMethods.GetSystemMenu(hwnd, false);
             if (sysMenu == IntPtr.Zero) {
                 return false;
             }
+            uint index = 5; // (uint) NativeMethods.GetMenuItemCount(sysMenu);
 
             var splitter = new NativeMethods.MENUITEMINFO {
-                cbSize = NativeMethods.MENUITEMINFO.sizeOf,
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
                 fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_FTYPE,
                 wID = MENUID_SPLITTER,
                 fType = NativeConstants.MFT_SEPARATOR
             };
 
             var topMostItem = new NativeMethods.MENUITEMINFO {
-                cbSize = NativeMethods.MENUITEMINFO.sizeOf,
-                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING | NativeConstants.MIIM_STATE,
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
+                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
                 wID = MENUID_TOPMOST,
                 dwTypeData = "トップにピン(&P)",
-                fState = NativeConstants.MFS_UNCHECKED
             };
 
-            NativeMethods.InsertMenuItem(sysMenu, 5, true, ref splitter);
-            NativeMethods.InsertMenuItem(sysMenu, 6, true, ref topMostItem);
+            var sendToBackItem = new NativeMethods.MENUITEMINFO {
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
+                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
+                wID = MENUID_SENDTOBACK,
+                dwTypeData = "背面へ送る(&B)",
+            };
+
+            var copyScreenshotItem = new NativeMethods.MENUITEMINFO {
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
+                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
+                wID = MENUID_COPYSCREENSHOT,
+                dwTypeData = "スクリーンショットをコピー(&E)"
+            };
+
+            var openProcessItem = new NativeMethods.MENUITEMINFO {
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
+                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
+                wID = MENUID_OPENPROCESSPATH,
+                dwTypeData = "プロセスのは場所を開く(&O)"
+            };
+
+            NativeMethods.InsertMenuItem(sysMenu, index, true, ref splitter);
+            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref topMostItem);
+            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref sendToBackItem);
+            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref copyScreenshotItem);
+            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref openProcessItem);
 
             return true;
         }
@@ -43,8 +75,10 @@ namespace SystemMenuImpl {
 
             NativeMethods.DeleteMenu(sysMenu, MENUID_SPLITTER, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_TOPMOST, NativeConstants.MF_BYCOMMAND);
+            NativeMethods.DeleteMenu(sysMenu, MENUID_SENDTOBACK, NativeConstants.MF_BYCOMMAND);
+            NativeMethods.DeleteMenu(sysMenu, MENUID_COPYSCREENSHOT, NativeConstants.MF_BYCOMMAND);
+            NativeMethods.DeleteMenu(sysMenu, MENUID_OPENPROCESSPATH, NativeConstants.MF_BYCOMMAND);
 
-            NativeMethods.GetSystemMenu(hwnd, true);
             return true;
         }
 
@@ -61,6 +95,46 @@ namespace SystemMenuImpl {
             isTopMost = !isTopMost;
             Utils.SetWindowTopMost(hwnd, isTopMost);
             InitializeSystemMenu(hwnd);
+        }
+
+        public static void ClickSendToBackMenuItem(IntPtr hwnd) {
+            NativeMethods.SetWindowPos(hwnd, new IntPtr(1), 0, 0, 0, 0, NativeConstants.SWP_NOSIZE | NativeConstants.SWP_NOMOVE);
+        }
+
+        public static void ClickCopyScreenshotMenuItem(IntPtr hwnd) {
+            NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect rect);
+            var bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+            using (var graphics = Graphics.FromImage(bitmap)) {
+                var hdc = graphics.GetHdc();
+                NativeMethods.PrintWindow(hwnd, hdc, 0);
+                graphics.ReleaseHdc(hdc);
+            }
+            Clipboard.Clear();
+            Clipboard.SetImage(bitmap);
+        }
+
+        public static void ClickOpenProcessPath(IntPtr hwnd) {
+            var hexHwnd = string.Format("0x{0:X6}", hwnd.ToInt64());
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid == 0) {
+                MessageBox.Show("プロセス (" + hexHwnd + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            var process = Process.GetProcessById((int) pid);
+            if (process == null) {
+                MessageBox.Show("プロセス (pid: " + pid + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string path;
+            try {
+                path = process.MainModule.FileName;
+            } catch {
+                var fileNameBuilder = new StringBuilder(1024);
+                var bufferLength = (uint) fileNameBuilder.Capacity + 1;
+                path = NativeMethods.QueryFullProcessImageName(process.Handle, 0, fileNameBuilder, ref bufferLength) ? fileNameBuilder.ToString() : null;
+            }
+            Process.Start("explorer.exe", "/select," + path);
         }
     }
 }

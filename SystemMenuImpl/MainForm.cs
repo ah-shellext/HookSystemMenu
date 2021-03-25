@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace SystemMenuImpl {
@@ -18,9 +17,11 @@ namespace SystemMenuImpl {
             _masterHwnd = masterHwnd;
             _anotherExePath = anotherExePath;
         }
+
         protected override void OnShown(EventArgs e) {
             if (!_isSlave) {
                 base.OnShown(e);
+                ntfIcon.Visible = true;
             } else {
                 Hide();
             }
@@ -38,31 +39,32 @@ namespace SystemMenuImpl {
                 _x86Process.Start();
 
                 Utils.SetWindowTopMost(Handle, true);
+                Utils.CurrentWindowsList = Utils.GetAllWindows();
+                foreach (var hwnd in Utils.CurrentWindowsList) {
+                    AddToList("Exist", hwnd);
+                    if (SystemMenu.InsertSystmMenu(hwnd)) {
+                        SystemMenu.InitializeSystemMenu(hwnd);
+                    }
+                }
             }
 
             Text += IntPtr.Size == 4 ? " (x86)" : " (x64)";
+
             HookMessages.RegisterMessages();
             HookMethods.StartHook(Handle);
-
-            Utils.CurrentWindowsList = Utils.GetAllWindows();
-            foreach (var hwnd in Utils.CurrentWindowsList) {
-                AddToList("Exist", hwnd);
-                if (SystemMenu.InsertSystmMenu(hwnd)) {
-                    SystemMenu.InitializeSystemMenu(hwnd);
-                }
-            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e) {
-            foreach (var hwnd in Utils.CurrentWindowsList) {
-                SystemMenu.RemoveSystemMenu(hwnd);
-            }
-
             HookMethods.StopHook();
             HookMessages.UnregisterMessages();
 
-            if (!_isSlave && _x86Process != null && !_x86Process.HasExited) {
-                Utils.ExitProcess(_x86Process);
+            if (!_isSlave) {
+                foreach (var hwnd in Utils.CurrentWindowsList) {
+                    SystemMenu.RemoveSystemMenu(hwnd);
+                }
+                if (_x86Process != null && !_x86Process.HasExited) {
+                    Utils.ExitProcess(_x86Process);
+                }
             }
 
             base.OnFormClosing(e);
@@ -91,20 +93,14 @@ namespace SystemMenuImpl {
             }
 
             var hwnd = m.WParam;
+            if (Utils.CurrentWindowsList.Contains(hwnd)) {
+                return;
+            }
+            Utils.CurrentWindowsList.Add(hwnd);
             AddToList("Create", hwnd);
             if (SystemMenu.InsertSystmMenu(hwnd)) {
                 SystemMenu.InitializeSystemMenu(hwnd);
             }
-            Utils.CurrentWindowsList.Add(hwnd);
-
-            /*var newList = Utils.GetAllWindows();
-            foreach (var newHwnd in newList.Except(Utils.CurrentWindowsList)) {
-                AddToList("Create", newHwnd);
-                if (SystemMenu.InsertSystmMenu(newHwnd)) {
-                    SystemMenu.InitializeSystemMenu(newHwnd);
-                }
-            }
-            Utils.CurrentWindowsList = newList;*/
         }
 
         private void OnWindowDestroyed(Message m) {
@@ -114,16 +110,12 @@ namespace SystemMenuImpl {
             }
 
             var hwnd = m.WParam;
+            if (!Utils.CurrentWindowsList.Contains(hwnd)) {
+                return;
+            }
+            Utils.CurrentWindowsList.Remove(hwnd);
             AddToList("Destroy", hwnd, true);
             SystemMenu.RemoveSystemMenu(hwnd);
-            Utils.CurrentWindowsList.Remove(hwnd);
-
-            /*var newList = Utils.GetAllWindows();
-            foreach (var newHwnd in Utils.CurrentWindowsList.Except(newList)) {
-                AddToList("Destroy", newHwnd, true);
-                SystemMenu.RemoveSystemMenu(newHwnd);
-            }
-            Utils.CurrentWindowsList = newList;*/
         }
 
         private void OnWindowActivated(Message m) {
@@ -134,19 +126,7 @@ namespace SystemMenuImpl {
 
             var hwnd = m.WParam;
             AddToList("Activate", hwnd);
-
-            /*var newList = Utils.GetAllWindows();
-            foreach (var newHwnd in newList.Except(Utils.CurrentWindowsList)) {
-                AddToList("Create(Act)", newHwnd);
-                if (SystemMenu.InsertSystmMenu(newHwnd)) {
-                    SystemMenu.InitializeSystemMenu(newHwnd);
-                }
-            }
-            foreach (var newHwnd in Utils.CurrentWindowsList.Except(newList)) {
-                AddToList("Destroy(Act)", newHwnd, true);
-                SystemMenu.RemoveSystemMenu(newHwnd);
-            }
-            Utils.CurrentWindowsList = newList;*/
+            SystemMenu.InitializeSystemMenu(hwnd);
         }
 
         private void OnWindowGetMessage(Message m) {
@@ -157,7 +137,6 @@ namespace SystemMenuImpl {
 
             var hwnd = m.WParam;
             AddToList("GetMsg", hwnd);
-
             Utils.CachedHandle = m.WParam;
             Utils.CachedMessage = m.LParam;
         }
@@ -167,10 +146,10 @@ namespace SystemMenuImpl {
                 NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HGETMESSAGE_PARAMS, m.WParam, m.LParam);
                 return;
             }
+
             if (Utils.CachedHandle == IntPtr.Zero || Utils.CachedMessage == IntPtr.Zero) {
                 return;
             }
-
             var hwnd = Utils.CachedHandle;
             var msg = Utils.CachedMessage;
             AddToList("GetMsgParams", Utils.CachedHandle);
@@ -179,6 +158,15 @@ namespace SystemMenuImpl {
                 switch (menuId) {
                 case SystemMenu.MENUID_TOPMOST:
                     SystemMenu.ClickTopMostMenuItem(hwnd);
+                    break;
+                case SystemMenu.MENUID_SENDTOBACK:
+                    SystemMenu.ClickSendToBackMenuItem(hwnd);
+                    break;
+                case SystemMenu.MENUID_COPYSCREENSHOT:
+                    SystemMenu.ClickCopyScreenshotMenuItem(hwnd);
+                    break;
+                case SystemMenu.MENUID_OPENPROCESSPATH:
+                    SystemMenu.ClickOpenProcessPath(hwnd);
                     break;
                 }
             }
@@ -196,6 +184,10 @@ namespace SystemMenuImpl {
             if (lbMessages.Items.Count != 0) {
                 lbMessages.SetSelected(lbMessages.Items.Count - 1, true);
             }
+        }
+
+        private void NtfIcon_MouseDoubleClick(object sender, MouseEventArgs e) {
+            Show();
         }
     }
 }

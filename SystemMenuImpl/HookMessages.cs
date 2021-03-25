@@ -29,3 +29,5 @@ namespace SystemMenuImpl {
         public static void UnregisterMessages() {
             // Do nothing
         }
+    }
+}
