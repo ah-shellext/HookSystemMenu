@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Security.Permissions;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SystemMenuImpl {
@@ -46,15 +43,27 @@ namespace SystemMenuImpl {
             Text += IntPtr.Size == 4 ? " (x86)" : " (x64)";
             HookMessages.RegisterMessages();
             HookMethods.StartHook(Handle);
+
+            Utils.CurrentWindowsList = Utils.GetAllWindows();
+            foreach (var hwnd in Utils.CurrentWindowsList) {
+                AddToList("Exist", hwnd);
+                if (SystemMenu.InsertSystmMenu(hwnd)) {
+                    SystemMenu.InitializeSystemMenu(hwnd);
+                }
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e) {
-            if (!_isSlave && _x86Process != null && !_x86Process.HasExited) {
-                Utils.ExitProcess(_x86Process);
+            foreach (var hwnd in Utils.CurrentWindowsList) {
+                SystemMenu.RemoveSystemMenu(hwnd);
             }
 
             HookMethods.StopHook();
             HookMessages.UnregisterMessages();
+
+            if (!_isSlave && _x86Process != null && !_x86Process.HasExited) {
+                Utils.ExitProcess(_x86Process);
+            }
 
             base.OnFormClosing(e);
         }
@@ -62,22 +71,120 @@ namespace SystemMenuImpl {
         protected override void WndProc(ref Message m) {
             base.WndProc(ref m);
 
-            if (m.Msg == HookMessages.MSG_HSHELL_WINDOWCREATED /* || m.Msg == HookMessages.MSG_HCBT_CREATEWND */) {
-                if (_isSlave) {
-                    NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWCREATED, m.WParam, m.LParam);
-                }
-                AddToList("Create", m.WParam);
-            } else if (m.Msg == HookMessages.MSG_HSHELL_WINDOWDESTROYED /* || m.Msg == HookMessages.MSG_HCBT_DESTROYWND */) {
-                if (_isSlave) {
-                    NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWDESTROYED, m.WParam, m.LParam);
-                }
-                AddToList("Destroy", m.WParam, true);
-            } else if (m.Msg == HookMessages.MSG_HSHELL_WINDOWACTIVATED /* || m.Msg == HookMessages.MSG_HCBT_ACTIVATE */) {
-                if (_isSlave) {
-                    NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWACTIVATED, m.WParam, m.LParam);
-                }
-                AddToList("Activate", m.WParam);
+            if (m.Msg == HookMessages.MSG_HSHELL_WINDOWCREATED) {
+                OnWindowCreated(m);
+            } else if (m.Msg == HookMessages.MSG_HSHELL_WINDOWDESTROYED) {
+                OnWindowDestroyed(m);
+            } else if (m.Msg == HookMessages.MSG_HSHELL_WINDOWACTIVATED) {
+                OnWindowActivated(m);
+            } else if (m.Msg == HookMessages.MSG_HGETMESSAGE) {
+                OnWindowGetMessage(m);
+            } else if (m.Msg == HookMessages.MSG_HGETMESSAGE_PARAMS) {
+                OnWindowGetMessageParams(m);
             }
+        }
+
+        private void OnWindowCreated(Message m) {
+            if (_isSlave) {
+                NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWCREATED, m.WParam, m.LParam);
+                return;
+            }
+
+            var hwnd = m.WParam;
+            AddToList("Create", hwnd);
+            if (SystemMenu.InsertSystmMenu(hwnd)) {
+                SystemMenu.InitializeSystemMenu(hwnd);
+            }
+            Utils.CurrentWindowsList.Add(hwnd);
+
+            /*var newList = Utils.GetAllWindows();
+            foreach (var newHwnd in newList.Except(Utils.CurrentWindowsList)) {
+                AddToList("Create", newHwnd);
+                if (SystemMenu.InsertSystmMenu(newHwnd)) {
+                    SystemMenu.InitializeSystemMenu(newHwnd);
+                }
+            }
+            Utils.CurrentWindowsList = newList;*/
+        }
+
+        private void OnWindowDestroyed(Message m) {
+            if (_isSlave) {
+                NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWDESTROYED, m.WParam, m.LParam);
+                return;
+            }
+
+            var hwnd = m.WParam;
+            AddToList("Destroy", hwnd, true);
+            SystemMenu.RemoveSystemMenu(hwnd);
+            Utils.CurrentWindowsList.Remove(hwnd);
+
+            /*var newList = Utils.GetAllWindows();
+            foreach (var newHwnd in Utils.CurrentWindowsList.Except(newList)) {
+                AddToList("Destroy", newHwnd, true);
+                SystemMenu.RemoveSystemMenu(newHwnd);
+            }
+            Utils.CurrentWindowsList = newList;*/
+        }
+
+        private void OnWindowActivated(Message m) {
+            if (_isSlave) {
+                NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HSHELL_WINDOWACTIVATED, m.WParam, m.LParam);
+                return;
+            }
+
+            var hwnd = m.WParam;
+            AddToList("Activate", hwnd);
+
+            /*var newList = Utils.GetAllWindows();
+            foreach (var newHwnd in newList.Except(Utils.CurrentWindowsList)) {
+                AddToList("Create(Act)", newHwnd);
+                if (SystemMenu.InsertSystmMenu(newHwnd)) {
+                    SystemMenu.InitializeSystemMenu(newHwnd);
+                }
+            }
+            foreach (var newHwnd in Utils.CurrentWindowsList.Except(newList)) {
+                AddToList("Destroy(Act)", newHwnd, true);
+                SystemMenu.RemoveSystemMenu(newHwnd);
+            }
+            Utils.CurrentWindowsList = newList;*/
+        }
+
+        private void OnWindowGetMessage(Message m) {
+            if (_isSlave) {
+                NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HGETMESSAGE, m.WParam, m.LParam);
+                return;
+            }
+
+            var hwnd = m.WParam;
+            AddToList("GetMsg", hwnd);
+
+            Utils.CachedHandle = m.WParam;
+            Utils.CachedMessage = m.LParam;
+        }
+
+        private void OnWindowGetMessageParams(Message m) {
+            if (_isSlave) {
+                NativeMethods.SendNotifyMessage(_masterHwnd, HookMessages.MSG_HGETMESSAGE_PARAMS, m.WParam, m.LParam);
+                return;
+            }
+            if (Utils.CachedHandle == IntPtr.Zero || Utils.CachedMessage == IntPtr.Zero) {
+                return;
+            }
+
+            var hwnd = Utils.CachedHandle;
+            var msg = Utils.CachedMessage;
+            AddToList("GetMsgParams", Utils.CachedHandle);
+            if (msg.ToInt64() == NativeConstants.WM_SYSCOMMAND) {
+                uint menuId = (uint) (m.WParam.ToInt64() & 0x0000FFFF);
+                switch (menuId) {
+                case SystemMenu.MENUID_TOPMOST:
+                    SystemMenu.ClickTopMostMenuItem(hwnd);
+                    break;
+                }
+            }
+
+            Utils.CachedHandle = IntPtr.Zero;
+            Utils.CachedMessage = IntPtr.Zero;
         }
 
         private void AddToList(string message, IntPtr hwnd, bool more = false) {

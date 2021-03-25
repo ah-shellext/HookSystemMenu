@@ -9,6 +9,7 @@ using System.Windows.Forms;
 namespace SystemMenuImpl {
 
     class Utils {
+
         public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
             var handleTopMost = (IntPtr) (-1);
             var handleNotTopMost = (IntPtr) (-2);
@@ -50,6 +51,31 @@ namespace SystemMenuImpl {
                 && NativeMethods.IsWindow(hwnd) && (more || NativeMethods.IsWindowVisible(hwnd))
                 && (more || (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_STYLE).ToInt64() & NativeConstants.WS_VISIBLE) != 0)
                 && (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_EXSTYLE).ToInt64() & NativeConstants.WS_EX_TOOLWINDOW) == 0;
+        }
+
+        public static List<IntPtr> CurrentWindowsList { get; set; }
+
+        public static IntPtr CachedHandle { get; set; }
+
+        public static IntPtr CachedMessage { get; set; }
+
+        public static List<IntPtr> GetAllWindows() {
+            var hwnds = new List<IntPtr>();
+            IntPtr dsk = NativeMethods.GetDesktopWindow();
+            IntPtr hwnd = NativeMethods.GetWindow(dsk, NativeConstants.GW_CHILD);
+
+            while (hwnd != IntPtr.Zero) {
+                if (IsWindow(hwnd) && hwnds.IndexOf(hwnd) == -1) {
+                    hwnds.Add(hwnd);
+                }
+                hwnd = NativeMethods.GetWindow(hwnd, NativeConstants.GW_HWNDNEXT);
+            }
+            return hwnds;
+        }
+
+        public static bool IsWindowTopMost(IntPtr hwnd) {
+            var flag = NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_EXSTYLE).ToInt64() & NativeConstants.WS_EX_TOPMOST;
+            return flag != 0;
         }
     }
 }

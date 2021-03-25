@@ -49,5 +49,40 @@ namespace SystemMenuImpl {
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MENUITEMINFO {
+            public uint cbSize;
+            public uint fMask;
+            public uint fType;
+            public uint fState;
+            public uint wID;
+            public IntPtr hSubMenu;
+            public IntPtr hbmpChecked;
+            public IntPtr hbmpUnchecked;
+            public IntPtr dwItemData;
+            public string dwTypeData;
+            public uint cch;
+            public IntPtr hbmpItem;
+
+            public static uint sizeOf {
+                get { return (uint) Marshal.SizeOf(typeof(MENUITEMINFO)); }
+            }
+        }
+
+        [DllImport("user32.dll")]
+        public static extern bool InsertMenuItem(IntPtr hMenu, uint uItem, bool fByPosition, [In] ref MENUITEMINFO lpmii);
+
+        [DllImport("user32.dll")]
+        public static extern bool DeleteMenu(IntPtr hMenu, uint uPosition, uint uFlags);
+
+        [DllImport("user32.dll")]
+        public static extern uint CheckMenuItem(IntPtr hmenu, uint uItem, uint uCheck);
+
+        [DllImport("user32.dll")]
+        public static extern uint GetMenuState(IntPtr hmenu, uint uItem, uint uFlags);
     }
 }
