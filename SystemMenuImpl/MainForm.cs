@@ -13,6 +13,9 @@ namespace SystemMenuImpl {
 
         public MainForm(bool slave, IntPtr masterHwnd, string anotherExePath) {
             InitializeComponent();
+            Opacity = 0;
+            Visible = false;
+
             _isSlave = slave;
             _masterHwnd = masterHwnd;
             _anotherExePath = anotherExePath;
@@ -22,9 +25,12 @@ namespace SystemMenuImpl {
             if (!_isSlave) {
                 base.OnShown(e);
                 ntfIcon.Visible = true;
-            } else {
-                Hide();
+
+                var cm = new ContextMenu();
+                cm.MenuItems.Add("終了(&X)", (_, __) => { Close(); });
+                ntfIcon.ContextMenu = cm;
             }
+            Hide();
         }
 
         protected override void OnLoad(EventArgs e) {
@@ -159,9 +165,6 @@ namespace SystemMenuImpl {
                 case SystemMenu.MENUID_TOPMOST:
                     SystemMenu.ClickTopMostMenuItem(hwnd);
                     break;
-                case SystemMenu.MENUID_SENDTOBACK:
-                    SystemMenu.ClickSendToBackMenuItem(hwnd);
-                    break;
                 case SystemMenu.MENUID_COPYSCREENSHOT:
                     SystemMenu.ClickCopyScreenshotMenuItem(hwnd);
                     break;
@@ -184,10 +187,6 @@ namespace SystemMenuImpl {
             if (lbMessages.Items.Count != 0) {
                 lbMessages.SetSelected(lbMessages.Items.Count - 1, true);
             }
-        }
-
-        private void NtfIcon_MouseDoubleClick(object sender, MouseEventArgs e) {
-            Show();
         }
     }
 }
