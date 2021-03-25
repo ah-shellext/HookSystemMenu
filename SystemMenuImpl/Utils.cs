@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace SystemMenuImpl {
 
@@ -74,6 +75,26 @@ namespace SystemMenuImpl {
         public static bool IsWindowTopMost(IntPtr hwnd) {
             var flag = NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_EXSTYLE).ToInt64() & NativeConstants.WS_EX_TOPMOST;
             return flag != 0;
+        }
+
+        public static Process GetProcessFromHwnd(IntPtr hwnd) {
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid == 0) {
+                return null;
+            }
+            return Process.GetProcessById((int) pid);
+        }
+
+        class Win32WindowWrapper : IWin32Window {
+            public IntPtr Handle { get; private set; }
+
+            public Win32WindowWrapper(IntPtr handle) {
+                Handle = handle;
+            }
+        }
+
+        public static IWin32Window GetIWin32WindowFromHwnd(IntPtr hwnd) {
+            return new Win32WindowWrapper(hwnd);
         }
     }
 }

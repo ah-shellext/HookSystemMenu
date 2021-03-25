@@ -15,6 +15,7 @@ namespace SystemMenuImpl {
         public const uint MENUID_SENDTOBACK = MENUID_START + 3;
         public const uint MENUID_COPYSCREENSHOT = MENUID_START + 4;
         public const uint MENUID_OPENPROCESSPATH = MENUID_START + 5;
+        public const uint MENUID_WINDOWINFORMATION = MENUID_START + 6;
 
         public static bool InsertSystmMenu(IntPtr hwnd) {
             IntPtr sysMenu = NativeMethods.GetSystemMenu(hwnd, false);
@@ -58,11 +59,19 @@ namespace SystemMenuImpl {
                 dwTypeData = "プロセスのは場所を開く(&O)"
             };
 
+            var windowInformationItem = new NativeMethods.MENUITEMINFO {
+                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
+                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
+                wID = MENUID_WINDOWINFORMATION,
+                dwTypeData = "ウィンドウの情報(&I)"
+            };
+
             NativeMethods.InsertMenuItem(sysMenu, index, true, ref splitter);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref topMostItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref sendToBackItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref copyScreenshotItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref openProcessItem);
+            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref windowInformationItem);
 
             return true;
         }
@@ -78,6 +87,7 @@ namespace SystemMenuImpl {
             NativeMethods.DeleteMenu(sysMenu, MENUID_SENDTOBACK, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_COPYSCREENSHOT, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_OPENPROCESSPATH, NativeConstants.MF_BYCOMMAND);
+            NativeMethods.DeleteMenu(sysMenu, MENUID_WINDOWINFORMATION, NativeConstants.MF_BYCOMMAND);
 
             return true;
         }
@@ -114,18 +124,11 @@ namespace SystemMenuImpl {
         }
 
         public static void ClickOpenProcessPath(IntPtr hwnd) {
-            var hexHwnd = string.Format("0x{0:X6}", hwnd.ToInt64());
-            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-            if (pid == 0) {
-                MessageBox.Show("プロセス (" + hexHwnd + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            var process = Process.GetProcessById((int) pid);
+            Process process = Utils.GetProcessFromHwnd(hwnd);
             if (process == null) {
-                MessageBox.Show("プロセス (pid: " + pid + ") は見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("プロセスは見つかりません。", "場所を開く", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-
             string path;
             try {
                 path = process.MainModule.FileName;
@@ -135,6 +138,14 @@ namespace SystemMenuImpl {
                 path = NativeMethods.QueryFullProcessImageName(process.Handle, 0, fileNameBuilder, ref bufferLength) ? fileNameBuilder.ToString() : null;
             }
             Process.Start("explorer.exe", "/select," + path);
+        }
+
+        public static void ClickWindowInformationPath(IntPtr hwnd) {
+            var title = Utils.GetWindowTitle(hwnd);
+            var form = new InfoForm() {
+                Text = string.Format("\"{0}\" の情報", title)
+            };
+            form.Show(Utils.GetIWin32WindowFromHwnd(hwnd));
         }
     }
 }

@@ -168,6 +168,9 @@ namespace SystemMenuImpl {
                 case SystemMenu.MENUID_OPENPROCESSPATH:
                     SystemMenu.ClickOpenProcessPath(hwnd);
                     break;
+                case SystemMenu.MENUID_WINDOWINFORMATION:
+                    SystemMenu.ClickWindowInformationPath(hwnd);
+                    break;
                 }
             }
 
