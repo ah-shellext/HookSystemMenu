@@ -7,7 +7,7 @@
     <ProjectGuid>{835E9306-843C-48CD-9182-546B58822479}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>SystemMenuImpl</RootNamespace>
-    <AssemblyName>SystemMenuImpl</AssemblyName>
+    <AssemblyName>HookSystemMenu</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -114,6 +114,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

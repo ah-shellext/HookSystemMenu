@@ -4,6 +4,8 @@
 
         public const uint MSGFLT_ADD = 0x1;
 
+        public const int WM_CLOSE = 0x0010;
+
         public const uint GW_OWNER = 4;
         public const int GWL_STYLE = -16;
         public const int GWL_EXSTYLE = -20;

@@ -12,7 +12,6 @@ namespace SystemMenuImpl {
 
         static readonly Mutex mutex = new Mutex(false, "{E6868BB1-D280-42AE-9439-1371E6304D5E}");
 
-        [STAThread]
         static void ShowError(string message) {
             var title = string.Format("HookSystemMenu ({0})", IntPtr.Size == 4 ? "x86" : "x64");
             MessageBox.Show(new Form { TopMost = true }, message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -27,11 +26,13 @@ namespace SystemMenuImpl {
             var masterHwnd = IntPtr.Zero;
 
             if (IntPtr.Size == 8) {
+                slave = false; // master
                 if (args.Length != 0) {
                     ShowError("Wrong arguments, x64 exe is only allowed to be a master, that takes no argument.");
                     return;
                 }
             } else if (IntPtr.Size == 4) {
+                slave = true; // slave
                 if (args.Length != 2) {
                     ShowError("Wrong arguments, x86 exe is only allowed to be a slave, that takes two arguments.");
                     return;
@@ -46,9 +47,8 @@ namespace SystemMenuImpl {
                     ShowError("Wrong arguments, master hwnd should be a valid hex number value.");
                     return;
                 }
-                slave = true;
             } else {
-                ShowError("This exe is not neither x86 nor x64, not supported yet.");
+                ShowError("This exe is neither x86 nor x64 version, is not supported yet.");
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace SystemMenuImpl {
                 ShowError(@"You have not set HookSystemMenu's registry setting, please check the HKEY_CURRENT_USER\SOFTWARE\AoiHosizora\HookSystemMenu key.");
                 return;
             }
-            var executablePath = (key.GetValue(IntPtr.Size == 4 ? "x64" : "x86") as string).Trim('"');
+            var executablePath = (key.GetValue(IntPtr.Size == 4 ? "x64" : "x86") as string).Trim('"').Replace(@"\\", @"\");
             if (string.IsNullOrWhiteSpace(executablePath) || !File.Exists(executablePath)) {
                 ShowError(@"HookSystemMenu's application file is not found, please check the HKEY_CURRENT_USER\SOFTWARE\AoiHosizora\HookSystemMenu key.");
                 return;

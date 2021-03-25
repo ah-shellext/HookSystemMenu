@@ -9,6 +9,29 @@ using System.Windows.Forms;
 namespace SystemMenuImpl {
 
     class Utils {
+        public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
+            var handleTopMost = (IntPtr) (-1);
+            var handleNotTopMost = (IntPtr) (-2);
+            var after = topMost ? handleTopMost : handleNotTopMost;
+
+            var flag = NativeConstants.SWP_NOOWNERZORDER | NativeConstants.SWP_NOACTIVATE | NativeConstants.SWP_NOMOVE | NativeConstants.SWP_NOSIZE;
+            NativeMethods.SetWindowPos(hwnd, after, 0, 0, 0, 0, flag);
+        }
+
+        public static void ExitProcess(Process process) {
+            var handles = new List<IntPtr>();
+            foreach (ProcessThread thread in process.Threads) {
+                NativeMethods.EnumThreadWindows((uint) thread.Id, (hwnd, lParam) => { handles.Add(hwnd); return true; }, (IntPtr) 0);
+            }
+            foreach (var handle in handles) {
+                NativeMethods.PostMessage(handle, NativeConstants.WM_CLOSE, (IntPtr) 0, (IntPtr) 0);
+            }
+            try {
+                if (process.WaitForExit(5000)) {
+                    process.Kill();
+                }
+            } catch { }
+        }
 
         public static string GetWindowTitle(IntPtr hwnd) {
             int length = NativeMethods.GetWindowTextLength(hwnd);
@@ -27,14 +50,6 @@ namespace SystemMenuImpl {
                 && NativeMethods.IsWindow(hwnd) && (more || NativeMethods.IsWindowVisible(hwnd))
                 && (more || (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_STYLE).ToInt64() & NativeConstants.WS_VISIBLE) != 0)
                 && (NativeMethods.GetWindowLong(hwnd, NativeConstants.GWL_EXSTYLE).ToInt64() & NativeConstants.WS_EX_TOOLWINDOW) == 0;
-        }
-        public static void SetWindowTopMost(IntPtr hwnd, Boolean topMost) {
-            var handleTopMost = (IntPtr) (-1);
-            var handleNotTopMost = (IntPtr) (-2);
-            var after = topMost ? handleTopMost : handleNotTopMost;
-
-            var flag = NativeConstants.SWP_NOOWNERZORDER | NativeConstants.SWP_NOACTIVATE | NativeConstants.SWP_NOMOVE | NativeConstants.SWP_NOSIZE;
-            NativeMethods.SetWindowPos(hwnd, after, 0, 0, 0, 0, flag);
         }
     }
 }
