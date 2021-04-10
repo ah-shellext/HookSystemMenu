@@ -3,6 +3,18 @@
 + A Windows hook that can add some menu items into each supported window's system menu.
 + Environment: `Windows 10 20H2 x64` `Visual Studio 2019` `msvc2019` `.NET Framework 4.8`
 
+### Tips
+
++ Bugs: 
+    + When close the application, some window's system menu will corrupt.
+    + Some actions in some applications (such as Chrome), cannot be invoked.
+    + Sometimes some windows cannot show the system menu after modified it.
+
+### Screenshots
+
+|![screenshot1](./assets/screenshot1.png)|![screenshot2](./assets/screenshot2.png)|
+|---|---|
+
 ### References
 
 + [ritchielawrence/cmdow](https://github.com/ritchielawrence/cmdow)

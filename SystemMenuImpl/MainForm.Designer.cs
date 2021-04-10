@@ -49,7 +49,6 @@ namespace SystemMenuImpl {
             // 
             this.ntfIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("ntfIcon.Icon")));
             this.ntfIcon.Text = "HookSystemMenu";
-            this.ntfIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NtfIcon_MouseDoubleClick);
             // 
             // MainForm
             // 

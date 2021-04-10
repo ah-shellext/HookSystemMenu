@@ -35,14 +35,7 @@ namespace SystemMenuImpl {
                 cbSize = NativeMethods.MENUITEMINFO.SizeOf,
                 fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
                 wID = MENUID_TOPMOST,
-                dwTypeData = "トップにピン(&P)",
-            };
-
-            var sendToBackItem = new NativeMethods.MENUITEMINFO {
-                cbSize = NativeMethods.MENUITEMINFO.SizeOf,
-                fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
-                wID = MENUID_SENDTOBACK,
-                dwTypeData = "背面へ送る(&B)",
+                dwTypeData = "常に手前に表示(&P)",
             };
 
             var copyScreenshotItem = new NativeMethods.MENUITEMINFO {
@@ -56,7 +49,7 @@ namespace SystemMenuImpl {
                 cbSize = NativeMethods.MENUITEMINFO.SizeOf,
                 fMask = NativeConstants.MIIM_ID | NativeConstants.MIIM_STRING,
                 wID = MENUID_OPENPROCESSPATH,
-                dwTypeData = "プロセスのは場所を開く(&O)"
+                dwTypeData = "プロセスの場所を開く(&O)"
             };
 
             var windowInformationItem = new NativeMethods.MENUITEMINFO {
@@ -68,7 +61,6 @@ namespace SystemMenuImpl {
 
             NativeMethods.InsertMenuItem(sysMenu, index, true, ref splitter);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref topMostItem);
-            NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref sendToBackItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref copyScreenshotItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref openProcessItem);
             NativeMethods.InsertMenuItem(sysMenu, ++index, true, ref windowInformationItem);
@@ -84,7 +76,6 @@ namespace SystemMenuImpl {
 
             NativeMethods.DeleteMenu(sysMenu, MENUID_SPLITTER, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_TOPMOST, NativeConstants.MF_BYCOMMAND);
-            NativeMethods.DeleteMenu(sysMenu, MENUID_SENDTOBACK, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_COPYSCREENSHOT, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_OPENPROCESSPATH, NativeConstants.MF_BYCOMMAND);
             NativeMethods.DeleteMenu(sysMenu, MENUID_WINDOWINFORMATION, NativeConstants.MF_BYCOMMAND);
@@ -105,10 +96,6 @@ namespace SystemMenuImpl {
             isTopMost = !isTopMost;
             Utils.SetWindowTopMost(hwnd, isTopMost);
             InitializeSystemMenu(hwnd);
-        }
-
-        public static void ClickSendToBackMenuItem(IntPtr hwnd) {
-            NativeMethods.SetWindowPos(hwnd, new IntPtr(1), 0, 0, 0, 0, NativeConstants.SWP_NOSIZE | NativeConstants.SWP_NOMOVE);
         }
 
         public static void ClickCopyScreenshotMenuItem(IntPtr hwnd) {
